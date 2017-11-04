@@ -36,6 +36,8 @@ public class FileException
 
 	private static final	int	MAX_PATHNAME_LENGTH	= 160;
 
+	private static final	String	LOCATION_STR	= "Location: ";
+
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
@@ -106,7 +108,7 @@ public class FileException
 	@Override
 	protected String getPrefix()
 	{
-		return ((file == null) ? null : getPathname() + "\n");
+		return ((file == null) ? null : LOCATION_STR + getPathname() + "\n");
 	}
 
 	//------------------------------------------------------------------
