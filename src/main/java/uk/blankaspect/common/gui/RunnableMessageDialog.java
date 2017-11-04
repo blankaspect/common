@@ -26,6 +26,7 @@ import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 
 //----------------------------------------------------------------------
@@ -45,8 +46,8 @@ public class RunnableMessageDialog
 	private static final	int	VERTICAL_PADDING	= 12;
 	private static final	int	HORIZONTAL_PADDING	= 24;
 
-	private static final	Color	BACKGROUND_COLOUR	= new Color(248, 240, 192);
-	private static final	Color	BORDER_COLOUR		= new Color(224, 128, 64);
+	private static final	Color	BACKGROUND_COLOUR	= new Color(252, 244, 208);
+	private static final	Color	BORDER_COLOUR		= new Color(240, 160, 128);
 
 ////////////////////////////////////////////////////////////////////////
 //  Member interfaces
@@ -88,7 +89,11 @@ public class RunnableMessageDialog
 		FLabel messageLabel = new FLabel(runnable.getMessage());
 		messageLabel.setBackground(BACKGROUND_COLOUR);
 		messageLabel.setOpaque(true);
-		GuiUtils.setPaddedLineBorder(messageLabel, VERTICAL_PADDING, HORIZONTAL_PADDING, BORDER_COLOUR);
+		messageLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(BORDER_COLOUR, 2),
+																  BorderFactory.createEmptyBorder(VERTICAL_PADDING,
+																								  HORIZONTAL_PADDING,
+																								  VERTICAL_PADDING,
+																								  HORIZONTAL_PADDING)));
 
 
 		//----  Window
