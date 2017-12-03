@@ -330,7 +330,7 @@ public class ChunkList
 	/**
 	 * Returns the chunk at the specified index in this list.
 	 *
-	 * @param  index  the index of the desired chunk in this list.
+	 * @param  index  the index of the required chunk in this list.
 	 * @return the chunk at the <b>{@code index}</b> in this list.
 	 * @throws IndexOutOfBoundsException
 	 *           if {@code (index < 0)} or {@code (index >= }{@link #getNumChunks()}{@code )}.
