@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 //----------------------------------------------------------------------
 
 
@@ -59,6 +61,7 @@ public class ResourceProperties
 		private ResourcePropertiesException(String    str,
 											Throwable cause)
 		{
+			// Call superclass constructor
 			super(str, cause);
 		}
 
@@ -79,6 +82,7 @@ public class ResourceProperties
 
 	public ResourceProperties(String pathname)
 	{
+		// Call alternative constructor
 		this(pathname, null);
 	}
 
@@ -111,7 +115,7 @@ public class ResourceProperties
 		}
 		catch (Exception e)
 		{
-			throw new ResourcePropertiesException(StringUtils.substitute(ERROR_READING_PROPERTIES_STR, pathname), e);
+			throw new ResourcePropertiesException(IndexedSub.sub(ERROR_READING_PROPERTIES_STR, pathname), e);
 		}
 	}
 
