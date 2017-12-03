@@ -78,7 +78,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 		("Line %1 contains an unclosed quotation."),
 
 		INVALID_OPTION
-		("\"" + OPTION_PREFIX + "%1\" is not a valid option."),
+		("'" + OPTION_PREFIX + "%1' is not a valid option."),
 
 		MISSING_OPTION_ARGUMENT
 		("The " + OPTION_PREFIX + "%1 option requires an argument."),
@@ -426,8 +426,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 					}
 					catch (Tokeniser.UnclosedQuotationException e)
 					{
-						throw new ArgumentFileException(ErrorId.UNCLOSED_QUOTATION, file,
-														Integer.toString(i + 1));
+						throw new ArgumentFileException(ErrorId.UNCLOSED_QUOTATION, file, Integer.toString(i + 1));
 					}
 				}
 			}
@@ -545,8 +544,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 								{
 									option = getOption(argument);
 									if (option == null)
-										throw new ParseException(ErrorId.INVALID_OPTION, argument,
-																 usageStr);
+										throw new ParseException(ErrorId.INVALID_OPTION, argument, usageStr);
 									if (option.hasArgument())
 									{
 										argument = null;
@@ -562,8 +560,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 									if (option == null)
 										throw new ParseException(ErrorId.INVALID_OPTION, name, usageStr);
 									if (!option.hasArgument())
-										throw new ParseException(ErrorId.UNEXPECTED_OPTION_ARGUMENT,
-																 name, usageStr);
+										throw new ParseException(ErrorId.UNEXPECTED_OPTION_ARGUMENT, name, usageStr);
 									argument = argument.substring(index + 1);
 									state = State.OPTION_ARGUMENT;
 								}
@@ -580,8 +577,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 					if (argument == null)
 					{
 						if (argumentIndex >= arguments.size())
-							throw new ParseException(ErrorId.MISSING_OPTION_ARGUMENT, option.getName(),
-													 usageStr);
+							throw new ParseException(ErrorId.MISSING_OPTION_ARGUMENT, option.getName(), usageStr);
 						argument = arguments.get(argumentIndex++);
 					}
 					elements.add(new Element<>(option, argument));
@@ -595,8 +591,7 @@ public class CommandLine<E extends Enum<E> & CommandLine.IOption<E>>
 						if (argument.startsWith(OPTION_PREFIX) && !optionsEnded)
 						{
 							if (noOptionsAfterNonOptionArguments)
-								throw new ParseException(ErrorId.OPTION_AFTER_NON_OPTION_ARGUMENT,
-														 usageStr);
+								throw new ParseException(ErrorId.OPTION_AFTER_NON_OPTION_ARGUMENT, usageStr);
 							state = State.OPTION;
 						}
 						else
