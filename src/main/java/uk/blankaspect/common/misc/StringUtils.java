@@ -41,8 +41,7 @@ public class StringUtils
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		char	SUBSTITUTION_PLACEHOLDER_PREFIX_CHAR	= '%';
-	public static final		char	ESCAPE_PREFIX_CHAR						= '\\';
+	public static final		char	ESCAPE_PREFIX_CHAR	= '\\';
 
 	public static final		String	ENCODING_NAME_UTF8	= "UTF-8";
 
@@ -53,11 +52,13 @@ public class StringUtils
 		SUFFIX
 	}
 
-	private static final	int	MIN_SUBSTITUTION_INDEX	= 1;
-
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
 
 	private StringUtils()
 	{
@@ -494,65 +495,6 @@ public class StringUtils
 
 		// Return list of lines
 		return lines;
-	}
-
-	//------------------------------------------------------------------
-
-	public static String substitute(String          str,
-									CharSequence... substitutionSeqs)
-	{
-		if (substitutionSeqs.length == 0)
-			return str;
-
-		StringBuilder buffer = new StringBuilder(str.length() + 32);
-		int index = 0;
-		while (index < str.length())
-		{
-			int startIndex = index;
-			index = str.indexOf(SUBSTITUTION_PLACEHOLDER_PREFIX_CHAR, index);
-			if (index < 0)
-				index = str.length();
-			if (index > startIndex)
-				buffer.append(str.substring(startIndex, index));
-			++index;
-
-			if ((index < str.length()) && (str.charAt(index) == SUBSTITUTION_PLACEHOLDER_PREFIX_CHAR))
-			{
-				buffer.append(SUBSTITUTION_PLACEHOLDER_PREFIX_CHAR);
-				++index;
-			}
-			else
-			{
-				startIndex = index;
-				while (index < str.length())
-				{
-					char ch = str.charAt(index);
-					if ((ch < '0') || (ch > '9'))
-						break;
-					++index;
-				}
-				if (index > startIndex)
-				{
-					int substIndex = Integer.parseInt(str.substring(startIndex, index)) -
-																					MIN_SUBSTITUTION_INDEX;
-					if ((substIndex >= 0) && (substIndex < substitutionSeqs.length))
-					{
-						CharSequence substSeq = substitutionSeqs[substIndex];
-						if (substSeq != null)
-							buffer.append(substSeq);
-					}
-				}
-			}
-		}
-		return buffer.toString();
-	}
-
-	//------------------------------------------------------------------
-
-	public static String substituteInteger(String str,
-										   int    value)
-	{
-		return substitute(str, Integer.toString(value));
 	}
 
 	//------------------------------------------------------------------
