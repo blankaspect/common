@@ -47,7 +47,7 @@ public class NlfUtils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Prevents this class from being instantiated.
+	 * Prevents this class from being instantiated externally.
 	 */
 
 	private NlfUtils()
@@ -163,7 +163,7 @@ public class NlfUtils
 	/**
 	 * Returns the length of the UTF-8 sequence that results from encoding the specified string.
 	 *
-	 * @param  str  the string whose encoded length is desired.
+	 * @param  str  the string whose encoded length is required.
 	 * @return the length of the UTF-8 sequence that results from encoding the specified string.
 	 * @since  1.0
 	 * @see    #stringToUtf8(String)
