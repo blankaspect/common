@@ -18,7 +18,7 @@ package uk.blankaspect.common.exception;
 // IMPORTS
 
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.indexedsub.IndexedSub;
 
 //----------------------------------------------------------------------
 
@@ -247,20 +247,18 @@ public class AppException
 		{
 			if (prefix != null)
 				buffer.append(prefix);
-			buffer.append((substitutionStrs == null)
-												? message
-												: StringUtils.substitute(message, substitutionStrs));
+			buffer.append((substitutionStrs == null) ? message : IndexedSub.sub(message, substitutionStrs));
 			if (suffix != null)
 				buffer.append(suffix);
 		}
 
 		// Wrap the text of the detail message of the cause and append the text to the detail message
-		if (cause != null)
+		while (cause != null)
 		{
 			String str = cause.getMessage();
 			if ((str == null) || (cause instanceof AppException))
 				str = cause.toString();
-			buffer.append("\n[");
+			buffer.append("\n- ");
 			int index = 0;
 			while (index < str.length())
 			{
@@ -288,7 +286,7 @@ public class AppException
 				}
 				if (breakIndex - index > 0)
 					buffer.append(str.substring(index, breakIndex));
-				buffer.append('\n');
+				buffer.append("\n  ");
 				for (index = breakIndex; index < str.length(); index++)
 				{
 					if (str.charAt(index) != ' ')
@@ -302,7 +300,9 @@ public class AppException
 					break;
 			}
 			buffer.setLength(++index);
-			buffer.append(']');
+
+			// Descend hierarchy of causes
+			cause = cause.getCause();
 		}
 
 		return buffer.toString();
