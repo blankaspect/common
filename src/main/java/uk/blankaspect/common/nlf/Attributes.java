@@ -690,7 +690,7 @@ public class Attributes
 	/**
 	 * Returns the attribute at the specified index in this chunk's list of attributes.
 	 *
-	 * @param  index  the index of the desired attribute in this chunk's list of attributes.
+	 * @param  index  the index of the required attribute in this chunk's list of attributes.
 	 * @return the attribute at <b>{@code index}</b> in this chunk's list of attributes.
 	 * @throws IndexOutOfBoundsException
 	 *           if {@code (index < 0)} or {@code (index >= }{@link #getNumAttributes()}{@code)}.
@@ -728,7 +728,7 @@ public class Attributes
 	 * in the list must have unique names, any occurrence in the list of an attribute with a given name will be the only
 	 * occurrence.
 	 *
-	 * @param  name  the name of the attribute whose index is desired.
+	 * @param  name  the name of the attribute whose index is required.
 	 * @return the index of the attribute whose name is <b>{@code name}</b> in this chunk's list of attributes, or
 	 *         {@code -1} if the list does not contain such an attribute.
 	 * @throws IllegalArgumentException
