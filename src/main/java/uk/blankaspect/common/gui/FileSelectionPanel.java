@@ -65,6 +65,8 @@ import javax.swing.event.ListSelectionListener;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 import uk.blankaspect.common.misc.DataImporter;
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.IFileImporter;
@@ -1141,10 +1143,8 @@ public abstract class FileSelectionPanel
 		fileList.setForeground(pathnameKind.textColour);
 		fileList.setSelectionForeground(pathnameKind.textColour);
 		pathnameKindButton.setText(pathnameKindToString(pathnameKind.getOther(), true));
-		pathnameKindButton.
-				setToolTipText(StringUtils.substitute(PATHNAME_KIND_TOOLTIP_STR,
-													  pathnameKindToString(pathnameKind.getOther(),
-																		   false)));
+		pathnameKindButton.setToolTipText(IndexedSub.sub(PATHNAME_KIND_TOOLTIP_STR,
+														 pathnameKindToString(pathnameKind.getOther(), false)));
 	}
 
 	//------------------------------------------------------------------

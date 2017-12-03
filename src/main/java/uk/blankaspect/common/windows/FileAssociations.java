@@ -38,6 +38,8 @@ import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 import uk.blankaspect.common.misc.IProcessOutputWriter;
 import uk.blankaspect.common.misc.StringUtils;
 import uk.blankaspect.common.misc.Task;
@@ -537,7 +539,7 @@ public class FileAssociations
 		for (String line : lines)
 		{
 			if (substitutionStrs.length > 0)
-				line = StringUtils.substitute(line, substitutionStrs);
+				line = IndexedSub.sub(line, substitutionStrs);
 
 			if (line.startsWith(")") || line.startsWith("}"))
 				indent -= INDENT_INCREMENT;
@@ -673,7 +675,7 @@ public class FileAssociations
 	{
 		// Append header comment
 		StringBuilder buffer = new StringBuilder(4096);
-		buffer.append(wrapHeader(StringUtils.substitute(HEADER_COMMENT1, appName)));
+		buffer.append(wrapHeader(IndexedSub.sub(HEADER_COMMENT1, appName)));
 		buffer.append(HEADER_PREFIX);
 		int startIndex = buffer.length();
 		for (Map<FileKindParam, String> params : fileKindParams)
