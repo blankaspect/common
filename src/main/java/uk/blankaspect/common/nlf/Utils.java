@@ -32,7 +32,7 @@ class Utils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Prevents this class from being instantiated.
+	 * Prevents this class from being instantiated externally.
 	 */
 
 	private Utils()

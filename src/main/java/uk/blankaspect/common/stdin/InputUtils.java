@@ -38,7 +38,7 @@ public class InputUtils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Prevents this class from being instantiated.
+	 * Prevents this class from being instantiated externally.
 	 */
 
 	private InputUtils()

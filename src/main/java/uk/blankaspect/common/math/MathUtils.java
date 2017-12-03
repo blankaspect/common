@@ -30,7 +30,7 @@ public class MathUtils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Prevents this class from being instantiated.
+	 * Prevents this class from being instantiated externally.
 	 */
 
 	private MathUtils()
