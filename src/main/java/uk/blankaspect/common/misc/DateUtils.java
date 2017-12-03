@@ -46,6 +46,10 @@ public class DateUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private DateUtils()
 	{
 	}

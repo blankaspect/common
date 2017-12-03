@@ -124,6 +124,10 @@ public class NumberUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private NumberUtils()
 	{
 	}

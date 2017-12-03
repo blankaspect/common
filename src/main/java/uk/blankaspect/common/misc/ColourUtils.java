@@ -53,6 +53,10 @@ public class ColourUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private ColourUtils()
 	{
 	}

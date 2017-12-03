@@ -35,6 +35,10 @@ public class SystemUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private SystemUtils()
 	{
 	}

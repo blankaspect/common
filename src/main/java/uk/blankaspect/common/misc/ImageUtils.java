@@ -43,6 +43,10 @@ public class ImageUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private ImageUtils()
 	{
 	}

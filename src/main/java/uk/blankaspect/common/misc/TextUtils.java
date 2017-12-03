@@ -97,6 +97,10 @@ public class TextUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private TextUtils()
 	{
 	}

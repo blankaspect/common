@@ -170,6 +170,10 @@ public class FileAttributeUtils
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
+	/**
+	 * Prevents this class from being instantiated externally.
+	 */
+
 	private FileAttributeUtils()
 	{
 	}
