@@ -5,8 +5,7 @@ applications.
 
 The Java version of the source code is 1.8 \(Java SE 8\).
 
-All the source files in this repo have a tab width of 4.  You can set this when viewing individual files on GitHub by
-appending `?ts=4` to the file's URL.  It's almost effortless. 
+All the source files in this repo have a tab width of 4. 
 
 The Blank Aspect applications are distributed as installers, executable JARs and source-code archives through
 SourceForge:  
