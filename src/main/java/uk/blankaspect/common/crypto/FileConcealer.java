@@ -35,10 +35,10 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
-import uk.blankaspect.common.gui.IProgressView;
-
 import uk.blankaspect.common.misc.IProgressListener;
 import uk.blankaspect.common.misc.Task;
+
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -146,7 +146,7 @@ public class FileConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;

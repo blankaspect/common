@@ -2,7 +2,7 @@
 
 AudioFile.java
 
-Audio file class.
+Class: audio file.
 
 \*====================================================================*/
 
@@ -47,7 +47,7 @@ import uk.blankaspect.common.misc.IStringKeyed;
 //----------------------------------------------------------------------
 
 
-// AUDIO FILE CLASS
+// CLASS: AUDIO FILE
 
 
 public abstract class AudioFile
@@ -81,7 +81,7 @@ public abstract class AudioFile
 ////////////////////////////////////////////////////////////////////////
 
 
-	// AUDIO FILE KIND
+	// ENUMERATION: AUDIO FILE KIND
 
 
 	public enum Kind
@@ -98,7 +98,7 @@ public abstract class AudioFile
 			"AIFF",
 			AiffFile.IFF_GROUP_ID,
 			AiffFile.AIFF_TYPE_ID,
-			FilenameSuffixes.AIFF
+			FilenameExtensions.AIFF
 		)
 		{
 			@Override
@@ -127,7 +127,7 @@ public abstract class AudioFile
 			"WAVE",
 			WaveFile.RIFF_GROUP_ID,
 			WaveFile.WAVE_TYPE_ID,
-			FilenameSuffixes.WAVE
+			FilenameExtensions.WAVE
 		)
 		{
 			@Override
@@ -150,11 +150,21 @@ public abstract class AudioFile
 			//----------------------------------------------------------
 		};
 
-		private interface FilenameSuffixes
+		private interface FilenameExtensions
 		{
 			String[]	AIFF	= { ".aif", ".aiff" };
 			String[]	WAVE	= { ".wav", ".wave" };
 		}
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String		key;
+		private	String		text;
+		private	IffId		groupId;
+		private	IffId		typeId;
+		private	String[]	filenameSuffixes;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -254,6 +264,7 @@ public abstract class AudioFile
 	//  Instance methods : IStringKeyed interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getKey()
 		{
 			return key;
@@ -273,22 +284,12 @@ public abstract class AudioFile
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String		key;
-		private	String		text;
-		private	IffId		groupId;
-		private	IffId		typeId;
-		private	String[]	filenameSuffixes;
-
 	}
 
 	//==================================================================
 
 
-	// ERROR IDENTIFIERS
+	// ENUMERATION: ERROR IDENTIFIERS
 
 
 	protected enum ErrorId
@@ -330,6 +331,12 @@ public abstract class AudioFile
 		("The file does not have a data chunk.");
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -344,6 +351,7 @@ public abstract class AudioFile
 	//  Instance methods : AppException.IId interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getMessage()
 		{
 			return message;
@@ -351,15 +359,27 @@ public abstract class AudioFile
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	Kind	defaultFileKind	= Kind.WAVE;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	protected	File				file;
+	protected	int					numChannels;
+	protected	int					bitsPerSample;
+	protected	int					sampleRate;
+	protected	int					numSampleFrames;
+	protected	long				sampleDataOffset;
+	protected	RandomAccessFile	raFile;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -431,7 +451,7 @@ public abstract class AudioFile
 	//------------------------------------------------------------------
 
 	public static Kind getFileKind(File file)
-		throws AppException
+		throws FileException
 	{
 		// Test for file
 		if (!file.isFile())
@@ -497,7 +517,7 @@ public abstract class AudioFile
 				throw new FileException(ErrorId.FAILED_TO_CLOSE_FILE, file, e);
 			}
 		}
-		catch (AppException e)
+		catch (FileException e)
 		{
 			// Close random access file
 			try
@@ -1001,24 +1021,6 @@ public abstract class AudioFile
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class fields
-////////////////////////////////////////////////////////////////////////
-
-	private static	Kind	defaultFileKind	= Kind.WAVE;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	protected	File				file;
-	protected	int					numChannels;
-	protected	int					bitsPerSample;
-	protected	int					sampleRate;
-	protected	int					numSampleFrames;
-	protected	long				sampleDataOffset;
-	protected	RandomAccessFile	raFile;
 
 }
 

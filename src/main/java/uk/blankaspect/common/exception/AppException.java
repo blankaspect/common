@@ -2,7 +2,7 @@
 
 AppException.java
 
-Application exception class.
+Class: application exception.
 
 \*====================================================================*/
 
@@ -23,7 +23,7 @@ import uk.blankaspect.common.indexedsub.IndexedSub;
 //----------------------------------------------------------------------
 
 
-// APPLICATION EXCEPTION CLASS
+// CLASS: APPLICATION EXCEPTION
 
 
 public class AppException
@@ -43,7 +43,7 @@ public class AppException
 ////////////////////////////////////////////////////////////////////////
 
 
-	// EXCEPTION IDENTIFIER INTERFACE
+	// INTERFACE: EXCEPTION IDENTIFIER
 
 
 	@FunctionalInterface
@@ -67,12 +67,18 @@ public class AppException
 ////////////////////////////////////////////////////////////////////////
 
 
-	// ANONYMOUS IDENTIFIER CLASS
+	// CLASS: ANONYMOUS IDENTIFIER
 
 
 	protected static class AnonymousId
 		implements IId
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -96,15 +102,24 @@ public class AppException
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	int	maxCauseMessageLineLength	= DEFAULT_MAX_CAUSE_MESSAGE_LINE_LENGTH;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	IId				id;
+	private	CharSequence[]	replacements;
+	private	String			parentPrefix;
+	private	String			parentSuffix;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -123,10 +138,10 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	public AppException(String    messageStr,
-						String... substitutionStrs)
+	public AppException(String          messageStr,
+						CharSequence... replacements)
 	{
-		this(new AnonymousId(messageStr), substitutionStrs);
+		this(new AnonymousId(messageStr), replacements);
 	}
 
 	//------------------------------------------------------------------
@@ -139,11 +154,11 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	public AppException(String    messageStr,
-						Throwable cause,
-						String... substitutionStrs)
+	public AppException(String          messageStr,
+						Throwable       cause,
+						CharSequence... replacements)
 	{
-		this(new AnonymousId(messageStr), cause, substitutionStrs);
+		this(new AnonymousId(messageStr), cause, replacements);
 	}
 
 	//------------------------------------------------------------------
@@ -155,11 +170,11 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	public AppException(IId       id,
-						String... substitutionStrs)
+	public AppException(IId             id,
+						CharSequence... replacements)
 	{
 		this(id);
-		setSubstitutionStrings(substitutionStrs);
+		setReplacements(replacements);
 	}
 
 	//------------------------------------------------------------------
@@ -173,12 +188,12 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	public AppException(IId       id,
-						Throwable cause,
-						String... substitutionStrs)
+	public AppException(IId             id,
+						Throwable       cause,
+						CharSequence... replacements)
 	{
 		this(id, cause);
-		setSubstitutionStrings(substitutionStrs);
+		setReplacements(replacements);
 	}
 
 	//------------------------------------------------------------------
@@ -193,7 +208,7 @@ public class AppException
 	public AppException(AppException exception,
 						boolean      ignorePrefixAndSuffix)
 	{
-		this(exception.id, exception.getCause(), exception.substitutionStrs);
+		this(exception.id, exception.getCause(), exception.replacements);
 		parentPrefix = exception.parentPrefix;
 		parentSuffix = exception.parentSuffix;
 		if (!ignorePrefixAndSuffix)
@@ -235,11 +250,11 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	protected static String createString(String    message,
-										 String    prefix,
-										 String    suffix,
-										 String[]  substitutionStrs,
-										 Throwable cause)
+	protected static String createString(String         message,
+										 String         prefix,
+										 String         suffix,
+										 CharSequence[] replacements,
+										 Throwable      cause)
 	{
 		// Append the detail message with prefix, suffix and any substitutions
 		StringBuilder buffer = new StringBuilder();
@@ -247,7 +262,7 @@ public class AppException
 		{
 			if (prefix != null)
 				buffer.append(prefix);
-			buffer.append((substitutionStrs == null) ? message : IndexedSub.sub(message, substitutionStrs));
+			buffer.append((replacements == null) ? message : IndexedSub.sub(message, replacements));
 			if (suffix != null)
 				buffer.append(suffix);
 		}
@@ -301,7 +316,7 @@ public class AppException
 			}
 			buffer.setLength(++index);
 
-			// Descend hierarchy of causes
+			// Get next exception in chain of causes
 			cause = cause.getCause();
 		}
 
@@ -328,7 +343,7 @@ public class AppException
 			suffix = (suffix == null) ? parentSuffix : suffix + parentSuffix;
 
 		// Create the string from its components
-		return createString(getMessage(), prefix, suffix, substitutionStrs, getCause());
+		return createString(getMessage(), prefix, suffix, replacements, getCause());
 	}
 
 	//------------------------------------------------------------------
@@ -344,45 +359,45 @@ public class AppException
 
 	//------------------------------------------------------------------
 
-	public String getSubstitutionString(int index)
+	public CharSequence getReplacement(int index)
 	{
-		return substitutionStrs[index];
+		return replacements[index];
 	}
 
 	//------------------------------------------------------------------
 
-	public String[] getSubstitutionStrings()
+	public CharSequence[] getReplacements()
 	{
-		return substitutionStrs;
+		return replacements;
 	}
 
 	//------------------------------------------------------------------
 
-	public void clearSubstitutionStrings()
+	public void clearReplacements()
 	{
-		substitutionStrs = null;
+		replacements = null;
 	}
 
 	//------------------------------------------------------------------
 
-	public void setSubstitutionString(int    index,
-									  String str)
+	public void setReplacement(int    index,
+							   String str)
 	{
-		substitutionStrs[index] = str;
+		replacements[index] = str;
 	}
 
 	//------------------------------------------------------------------
 
-	public void setSubstitutionStrings(String... strs)
+	public void setReplacement(int value)
 	{
-		substitutionStrs = strs;
+		setReplacements(Integer.toString(value));
 	}
 
 	//------------------------------------------------------------------
 
-	public void setSubstitutionDecValue(int value)
+	public void setReplacements(CharSequence... strs)
 	{
-		setSubstitutionStrings(Integer.toString(value));
+		replacements = strs;
 	}
 
 	//------------------------------------------------------------------
@@ -400,21 +415,6 @@ public class AppException
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class fields
-////////////////////////////////////////////////////////////////////////
-
-	private static	int	maxCauseMessageLineLength	= DEFAULT_MAX_CAUSE_MESSAGE_LINE_LENGTH;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	IId			id;
-	private	String[]	substitutionStrs;
-	private	String		parentPrefix;
-	private	String		parentSuffix;
 
 }
 

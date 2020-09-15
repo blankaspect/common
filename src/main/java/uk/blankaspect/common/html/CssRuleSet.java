@@ -24,7 +24,7 @@ import java.util.List;
 
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ public class CssRuleSet
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		public	String	property;
@@ -277,7 +277,7 @@ public class CssRuleSet
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String		selector;

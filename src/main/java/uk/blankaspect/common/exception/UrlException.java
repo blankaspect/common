@@ -55,9 +55,9 @@ public class UrlException
 
 	public UrlException(AppException.IId id,
 						URL              url,
-						String...        substitutionStrs)
+						CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.url = url;
 	}
 
@@ -66,9 +66,9 @@ public class UrlException
 	public UrlException(AppException.IId id,
 						URL              url,
 						Throwable        cause,
-						String...        substitutionStrs)
+						CharSequence...  replacements)
 	{
-		super(id, cause, substitutionStrs);
+		super(id, cause, replacements);
 		this.url = url;
 	}
 
@@ -77,7 +77,7 @@ public class UrlException
 	public UrlException(AppException exception,
 						URL          url)
 	{
-		this(exception.getId(), url, exception.getCause(), exception.getSubstitutionStrings());
+		this(exception.getId(), url, exception.getCause(), exception.getReplacements());
 	}
 
 	//------------------------------------------------------------------
@@ -106,7 +106,7 @@ public class UrlException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	URL	url;

@@ -77,7 +77,7 @@ public class Substitution
 		if (target == null)
 			throw new IllegalArgumentException();
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.target = target;
 		this.replacement = (replacement == null) ? "" : replacement;
 		this.literal = literal;
@@ -117,7 +117,7 @@ public class Substitution
 		if (strs.size() != 3)
 			throw new IllegalArgumentException();
 
-		// Initialise instance fields
+		// Initialise instance variables
 		index = 0;
 		target = strs.get(index++);
 		replacement = strs.get(index++);
@@ -253,7 +253,7 @@ public class Substitution
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	target;

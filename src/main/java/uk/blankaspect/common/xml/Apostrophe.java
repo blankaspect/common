@@ -2,7 +2,7 @@
 
 Apostrophe.java
 
-Apostrophe enumeration.
+Enumeration: apostrophe.
 
 \*====================================================================*/
 
@@ -18,12 +18,14 @@ package uk.blankaspect.common.xml;
 // IMPORTS
 
 
+import java.util.Arrays;
+
 import uk.blankaspect.common.misc.IStringKeyed;
 
 //----------------------------------------------------------------------
 
 
-// APOSTROPHE ENUMERATION
+// ENUMERATION: APOSTROPHE
 
 
 public enum Apostrophe
@@ -44,7 +46,7 @@ public enum Apostrophe
 	XML_ENTITY
 	(
 		"xmlEntity",
-		XmlConstants.ENTITY_APOS,
+		XmlConstants.Entity.APOS,
 		XmlConstants.EntityName.APOS
 	),
 
@@ -54,6 +56,14 @@ public enum Apostrophe
 		"&#39;",
 		"#39"
 	);
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String	key;
+	private	String	text;
+	private	String	entityName;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -74,21 +84,12 @@ public enum Apostrophe
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static Apostrophe get(int index)
-	{
-		return (((index >= 0) && (index < values().length)) ? values()[index] : null);
-	}
-
-	//------------------------------------------------------------------
-
 	public static Apostrophe forKey(String key)
 	{
-		for (Apostrophe value : values())
-		{
-			if (value.key.equals(key))
-				return value;
-		}
-		return null;
+		return Arrays.stream(values())
+						.filter(value -> value.key.equals(key))
+						.findFirst()
+						.orElse(null);
 	}
 
 	//------------------------------------------------------------------
@@ -97,6 +98,7 @@ public enum Apostrophe
 //  Instance methods : IStringKeyed interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public String getKey()
 	{
 		return key;
@@ -126,14 +128,6 @@ public enum Apostrophe
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	String	key;
-	private	String	text;
-	private	String	entityName;
 
 }
 

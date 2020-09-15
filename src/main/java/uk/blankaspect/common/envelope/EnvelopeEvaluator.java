@@ -2,7 +2,7 @@
 
 EnvelopeEvaluator.java
 
-Envelope evaluator class.
+Class: envelope evaluator.
 
 \*====================================================================*/
 
@@ -19,16 +19,17 @@ package uk.blankaspect.common.envelope;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
-import uk.blankaspect.common.misc.EnvelopeNode;
+import uk.blankaspect.common.math.Point2D;
+
 import uk.blankaspect.common.misc.IEvaluable;
 
 //----------------------------------------------------------------------
 
 
-// ENVELOPE EVALUATOR CLASS
+// CLASS: ENVELOPE EVALUATOR
 
 
 public class EnvelopeEvaluator
@@ -40,11 +41,12 @@ public class EnvelopeEvaluator
 ////////////////////////////////////////////////////////////////////////
 
 
-	// NODE CLASS
+	// CLASS: ENVELOPE NODE
 
 
 	private static class Node
-		extends EnvelopeNode
+		extends Point2D
+		implements Comparable<Node>
 	{
 
 	////////////////////////////////////////////////////////////////////
@@ -59,9 +61,9 @@ public class EnvelopeEvaluator
 
 		//--------------------------------------------------------------
 
-		private Node(EnvelopeNode node)
+		private Node(Point2D node)
 		{
-			super(node);
+			this(node.getX(), node.getY());
 		}
 
 		//--------------------------------------------------------------
@@ -79,11 +81,41 @@ public class EnvelopeEvaluator
 			super(node.x, node.y[index]);
 		}
 
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Comparable interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int compareTo(Node other)
+		{
+			return Double.compare(getX(), other.getX());
+		}
+
 		//--------------------------------------------------------------
 
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	Envelope.Kind	kind;
+	private	List<Point2D>	nodes;
+	private	int				nodeIndex;
+	private	double			evalX;
+	private	double			evalY;
+	private	double			x0;
+	private	double			x1;
+	private	double			x2;
+	private	double			y0;
+	private	double			y1;
+	private	double			y2;
+	private	double			m0;
+	private	double			m1;
+	private	double			a;
+	private	double			b;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -116,44 +148,44 @@ public class EnvelopeEvaluator
 
 	//------------------------------------------------------------------
 
-	public EnvelopeEvaluator(Envelope.Kind      kind,
-							 List<EnvelopeNode> nodes)
+	public EnvelopeEvaluator(Envelope.Kind                 kind,
+							 Collection<? extends Point2D> nodes)
 	{
 		this.kind = kind;
 		this.nodes = new ArrayList<>(nodes);
 
-		Collections.sort(this.nodes);
+		this.nodes.sort(Point2D.X_COMPARATOR);
 
 		initEvaluation();
 	}
 
 	//------------------------------------------------------------------
 
-	public EnvelopeEvaluator(List<Envelope.SimpleNode> nodes,
-							 Envelope.Kind             kind)
+	public EnvelopeEvaluator(Iterable<? extends Envelope.SimpleNode> nodes,
+							 Envelope.Kind                           kind)
 	{
 		this.kind = kind;
 		this.nodes = new ArrayList<>();
 		for (Envelope.SimpleNode node : nodes)
 			this.nodes.add(new Node(node));
 
-		Collections.sort(this.nodes);
+		this.nodes.sort(Point2D.X_COMPARATOR);
 
 		initEvaluation();
 	}
 
 	//------------------------------------------------------------------
 
-	public EnvelopeEvaluator(List<Envelope.CompoundNode> nodes,
-							 int                         bandIndex,
-							 Envelope.Kind               kind)
+	public EnvelopeEvaluator(Iterable<? extends Envelope.CompoundNode> nodes,
+							 int                                       bandIndex,
+							 Envelope.Kind                             kind)
 	{
 		this.kind = kind;
 		this.nodes = new ArrayList<>();
 		for (Envelope.CompoundNode node : nodes)
 			this.nodes.add(new Node(node, bandIndex));
 
-		Collections.sort(this.nodes);
+		this.nodes.sort(Point2D.X_COMPARATOR);
 
 		initEvaluation();
 	}
@@ -164,6 +196,7 @@ public class EnvelopeEvaluator
 //  Instance methods : IEvaluable interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void initEvaluation()
 	{
 		nodeIndex = 0;
@@ -172,57 +205,57 @@ public class EnvelopeEvaluator
 		{
 			case CUBIC_SPLINE_A:
 			{
-				EnvelopeNode node = nodes.get(nodeIndex++);
-				x0 = node.x;
-				y0 = node.y;
+				Point2D node = nodes.get(nodeIndex++);
+				x0 = node.getX();
+				y0 = node.getY();
 				node = nodes.get(nodeIndex++);
-				x1 = node.x;
-				y1 = node.y;
+				x1 = node.getX();
+				y1 = node.getY();
 				node = (nodeIndex < nodes.size()) ? nodes.get(nodeIndex++)
-												  : new EnvelopeNode(x1 + (x1 - x0), y1 + (y1 - y0));
-				x2 = node.x;
-				y2 = node.y;
+												  : new Point2D(x1 + (x1 - x0), y1 + (y1 - y0));
+				x2 = node.getX();
+				y2 = node.getY();
 
-				double dx10 = x1 - x0;
-				double dx20 = x2 - x0;
-				double dx21 = x2 - x1;
-				double dx10_2 = dx10 * dx10;
-				double dx10_3 = dx10_2 * dx10;
-				double dy10 = y1 - y0;
-				double dy20 = y2 - y0;
-				double dy21 = y2 - y1;
+				double dx01 = x1 - x0;
+				double dx02 = x2 - x0;
+				double dx12 = x2 - x1;
+				double dx01_2 = dx01 * dx01;
+				double dx01_3 = dx01_2 * dx01;
+				double dy01 = y1 - y0;
+				double dy02 = y2 - y0;
+				double dy12 = y2 - y1;
 
-				m0 = dy10 / dx10 - (dx10 / dx20) * (dy21 / dx21 - dy10 / dx10);
-				m1 = dy20 / dx20;
-				a = (m0 + m1) / dx10_2 - 2.0 * dy10 / dx10_3;
-				b = 3 * dy10 / dx10_2 - (2.0 * m0 + m1) / dx10;
+				m0 = dy01 / dx01 - (dx01 / dx02) * (dy12 / dx12 - dy01 / dx01);
+				m1 = dy02 / dx02;
+				a = (m0 + m1) / dx01_2 - 2.0 * dy01 / dx01_3;
+				b = 3 * dy01 / dx01_2 - (2.0 * m0 + m1) / dx01;
 				break;
 			}
 
 			case CUBIC_SPLINE_B:
 			{
-				EnvelopeNode node = nodes.get(nodeIndex++);
-				x0 = node.x;
-				y0 = node.y;
+				Point2D node = nodes.get(nodeIndex++);
+				x0 = node.getX();
+				y0 = node.getY();
 				node = nodes.get(nodeIndex++);
-				x1 = node.x;
-				y1 = node.y;
+				x1 = node.getX();
+				y1 = node.getY();
 				node = (nodeIndex < nodes.size()) ? nodes.get(nodeIndex++)
-												  : new EnvelopeNode(x1 + (x1 - x0), y1 + (y1 - y0));
-				x2 = node.x;
-				y2 = node.y;
+												  : new Point2D(x1 + (x1 - x0), y1 + (y1 - y0));
+				x2 = node.getX();
+				y2 = node.getY();
 
-				double dx10 = x1 - x0;
-				double dx20 = x2 - x0;
-				double dx21 = x2 - x1;
-				double dx10_2 = dx10 * dx10;
-				double dx20_2 = dx20 * dx20;
-				double dy10 = y1 - y0;
-				double dy21 = y2 - y1;
+				double dx01 = x1 - x0;
+				double dx02 = x2 - x0;
+				double dx12 = x2 - x1;
+				double dx01_2 = dx01 * dx01;
+				double dx02_2 = dx02 * dx02;
+				double dy01 = y1 - y0;
+				double dy12 = y2 - y1;
 
-				m0 = dy10 / dx10 - dx10 / dx20 * (dy21 / dx21 - dy10 / dx10);
-				a = dy21 / (dx21 * dx20_2) - dy10 * (dx10 + dx20) / (dx10_2 * dx20_2) + m0 / (dx10 * dx20);
-				b = dy10 / dx10_2 - a * dx10 - m0 / dx10;
+				m0 = dy01 / dx01 - dx01 / dx02 * (dy12 / dx12 - dy01 / dx01);
+				a = dy12 / (dx12 * dx02_2) - dy01 * (dx01 + dx02) / (dx01_2 * dx02_2) + m0 / (dx01 * dx02);
+				b = dy01 / dx01_2 - a * dx01 - m0 / dx01;
 				break;
 			}
 
@@ -238,6 +271,7 @@ public class EnvelopeEvaluator
 	 * @throws IllegalArgumentException
 	 */
 
+	@Override
 	public double evaluate(double x)
 	{
 		if ((x < Envelope.Node.MIN_X) || (x > Envelope.Node.MAX_X))
@@ -250,42 +284,50 @@ public class EnvelopeEvaluator
 			{
 				case LINEAR:
 				{
-					EnvelopeNode node = nodes.get(nodeIndex);
-					double x0 = node.x;
-					double y0 = node.y;
+					Point2D node = nodes.get(nodeIndex);
+					x0 = node.getX();
+					y0 = node.getY();
 					node = nodes.get(nodeIndex + 1);
-					while (x > node.x)
+					x1 = node.getX();
+					y1 = node.getY();
+					while (x > x1)
 					{
-						x0 = node.x;
-						y0 = node.y;
+						x0 = x1;
+						y0 = y1;
 						++nodeIndex;
 						node = nodes.get(nodeIndex + 1);
+						x1 = node.getX();
+						y1 = node.getY();
 					}
-					evalY = (node.x == x0) ? 0.5 * (y0 + node.y)
-										   : y0 + (x - x0) * (node.y - y0) / (node.x - x0);
+
+					evalY = (x0 == x1) ? 0.5 * (y0 + y1)
+									   : y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 					break;
 				}
 
 				case CUBIC_SEGMENT:
 				{
-					EnvelopeNode node = nodes.get(nodeIndex);
-					double x0 = node.x;
-					double y0 = node.y;
+					Point2D node = nodes.get(nodeIndex);
+					x0 = node.getX();
+					y0 = node.getY();
 					node = nodes.get(nodeIndex + 1);
-					while (x > node.x)
+					x1 = node.getX();
+					y1 = node.getY();
+					while (x > x1)
 					{
-						x0 = node.x;
-						y0 = node.y;
+						x0 = x1;
+						y0 = y1;
 						++nodeIndex;
 						node = nodes.get(nodeIndex + 1);
+						x1 = node.getX();
+						y1 = node.getY();
 					}
-					double x1 = node.x;
+
 					if (x0 == x1)
-						evalY = 0.5 * (y0 + node.y);
+						evalY = 0.5 * (y0 + y1);
 					else
 					{
-						double a = 2.0 * (node.y - y0) /
-													(x0 * x0 * (x0 - 3.0 * x1) - x1 * x1 * (x1 - 3.0 * x0));
+						double a = 2.0 * (y1 - y0) / (x0 * x0 * (x0 - 3.0 * x1) - x1 * x1 * (x1 - 3.0 * x0));
 						double b = -1.5 * a * (x0 + x1);
 						double c = 3.0 * a * x0 * x1;
 						double d = y0 + 0.5 * a * x0 * x0 * (x0 - 3.0 * x1);
@@ -304,26 +346,24 @@ public class EnvelopeEvaluator
 						x1 = x2;
 						y1 = y2;
 
-						EnvelopeNode node = (nodeIndex < nodes.size())
-													? nodes.get(nodeIndex++)
-													: new EnvelopeNode(x1 + (x1 - x0), y1 + (y1 - y0));
-						x2 = node.x;
-						y2 = node.y;
+						Point2D node = (nodeIndex < nodes.size()) ? nodes.get(nodeIndex++)
+																  : new Point2D(x1 + (x1 - x0), y1 + (y1 - y0));
+						x2 = node.getX();
+						y2 = node.getY();
 
-						double dx10 = x1 - x0;
-						double dx20 = x2 - x0;
-						double dx10_2 = dx10 * dx10;
-						double dx10_3 = dx10_2 * dx10;
-						double dy10 = y1 - y0;
-						double dy20 = y2 - y0;
+						double dx01 = x1 - x0;
+						double dx02 = x2 - x0;
+						double dx01_2 = dx01 * dx01;
+						double dx01_3 = dx01_2 * dx01;
+						double dy01 = y1 - y0;
+						double dy02 = y2 - y0;
 
-						m0 = Double.isNaN(m1)
-										? dy10 / dx10 - dx10 / dx20 * ((y2 - y1) / (x2 - x1) - dy10 / dx10)
-										: m1;
-						m1 = dy20 / dx20;
+						m0 = Double.isNaN(m1) ? dy01 / dx01 - dx01 / dx02 * ((y2 - y1) / (x2 - x1) - dy01 / dx01)
+											  : m1;
+						m1 = dy02 / dx02;
 
-						a = (m0 + m1) / dx10_2 - 2.0 * dy10 / dx10_3;
-						b = 3 * dy10 / dx10_2 - (2.0 * m0 + m1) / dx10;
+						a = (m0 + m1) / dx01_2 - 2.0 * dy01 / dx01_3;
+						b = 3 * dy01 / dx01_2 - (2.0 * m0 + m1) / dx01;
 					}
 					double dx = x - x0;
 					evalY = ((a * dx + b) * dx + m0) * dx + y0;
@@ -334,7 +374,7 @@ public class EnvelopeEvaluator
 				{
 					while ((x >= x1) && (nodeIndex < nodes.size()))
 					{
-						double prevDx10 = x1 - x0;
+						double prevDx01 = x1 - x0;
 
 						x0 = x1;
 						y0 = y1;
@@ -342,25 +382,24 @@ public class EnvelopeEvaluator
 						x1 = x2;
 						y1 = y2;
 
-						EnvelopeNode node = nodes.get(nodeIndex++);
-						x2 = node.x;
-						y2 = node.y;
+						Point2D node = nodes.get(nodeIndex++);
+						x2 = node.getX();
+						y2 = node.getY();
 
-						double dx10 = x1 - x0;
-						double dx20 = x2 - x0;
-						double dx21 = x2 - x1;
-						double dx10_2 = dx10 * dx10;
-						double dx20_2 = dx20 * dx20;
-						double dy10 = y1 - y0;
-						double dy21 = y2 - y1;
+						double dx01 = x1 - x0;
+						double dx02 = x2 - x0;
+						double dx12 = x2 - x1;
+						double dx01_2 = dx01 * dx01;
+						double dx02_2 = dx02 * dx02;
+						double dy01 = y1 - y0;
+						double dy12 = y2 - y1;
 
 						if (Double.isNaN(m0))
-							m0 = dy10 / dx10 - dx10 / dx20 * (dy21 / dx21 - dy10 / dx10);
+							m0 = dy01 / dx01 - dx01 / dx02 * (dy12 / dx12 - dy01 / dx01);
 						else
-							m0 += (3.0 * a * prevDx10 + 2.0 * b) * prevDx10;
-						a = dy21 / (dx21 * dx20_2) - dy10 * (dx10 + dx20) / (dx10_2 * dx20_2) + m0 /
-																							(dx10 * dx20);
-						b = dy10 / dx10_2 - a * dx10 - m0 / dx10;
+							m0 += (3.0 * a * prevDx01 + 2.0 * b) * prevDx01;
+						a = dy12 / (dx12 * dx02_2) - dy01 * (dx01 + dx02) / (dx01_2 * dx02_2) + m0 / (dx01 * dx02);
+						b = dy01 / dx01_2 - a * dx01 - m0 / dx01;
 					}
 					double dx = x - x0;
 					evalY = ((a * dx + b) * dx + m0) * dx + y0;
@@ -373,26 +412,6 @@ public class EnvelopeEvaluator
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	Envelope.Kind		kind;
-	private	List<EnvelopeNode>	nodes;
-	private	int					nodeIndex;
-	private	double				evalX;
-	private	double				evalY;
-	private	double				x0;
-	private	double				x1;
-	private	double				x2;
-	private	double				y0;
-	private	double				y1;
-	private	double				y2;
-	private	double				m0;
-	private	double				m1;
-	private	double				a;
-	private	double				b;
 
 }
 

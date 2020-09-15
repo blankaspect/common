@@ -61,7 +61,7 @@ public class NlfException
 		// Call superclass constructor
 		super(id.getMessage());
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 		offset = -1;
 	}
@@ -83,7 +83,7 @@ public class NlfException
 		// Call superclass constructor
 		super(id.getMessage(), cause);
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 		offset = -1;
 	}
@@ -146,7 +146,7 @@ public class NlfException
 		// Call superclass constructor
 		super(id.getMessage());
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 		this.file = file;
 		this.offset = (offset < 0) ? -1 : offset;
@@ -174,7 +174,7 @@ public class NlfException
 		// Call superclass constructor
 		super(id.getMessage(), cause);
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 		this.file = file;
 		this.offset = (offset < 0) ? -1 : offset;
@@ -234,7 +234,7 @@ public class NlfException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	ExceptionId	id;

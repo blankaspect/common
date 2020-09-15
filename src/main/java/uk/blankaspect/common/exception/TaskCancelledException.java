@@ -2,7 +2,7 @@
 
 TaskCancelledException.java
 
-Class: "task cancelled" exception.
+Class: 'task cancelled' exception.
 
 \*====================================================================*/
 
@@ -15,12 +15,19 @@ package uk.blankaspect.common.exception;
 //----------------------------------------------------------------------
 
 
-// CLASS: "TASK CANCELLED" EXCEPTION
+// CLASS: 'TASK CANCELLED' EXCEPTION
 
 
 public class TaskCancelledException
 	extends AppException
 {
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	int		code;
+	private	Thread	thread;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -36,7 +43,7 @@ public class TaskCancelledException
 
 	public TaskCancelledException(int code)
 	{
-		// Initialise instance fields
+		// Initialise instance variables
 		this.code = code;
 		thread = Thread.currentThread();
 	}
@@ -60,13 +67,6 @@ public class TaskCancelledException
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	int		code;
-	private	Thread	thread;
 
 }
 

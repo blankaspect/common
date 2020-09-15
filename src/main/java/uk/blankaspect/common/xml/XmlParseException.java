@@ -59,9 +59,9 @@ public class XmlParseException
 
 	public XmlParseException(AppException.IId id,
 							 String           location,
-							 String[]         substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.location = location;
 	}
 
@@ -80,9 +80,9 @@ public class XmlParseException
 	public XmlParseException(AppException.IId id,
 							 String           location,
 							 String           value,
-							 String...        substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		this(id, location, substitutionStrs);
+		this(id, location, replacements);
 		this.value = value;
 	}
 
@@ -132,9 +132,9 @@ public class XmlParseException
 
 	public XmlParseException(AppException.IId id,
 							 File             file,
-							 String[]         substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.file = file;
 	}
 
@@ -142,9 +142,9 @@ public class XmlParseException
 
 	public XmlParseException(AppException.IId id,
 							 URL              url,
-							 String[]         substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.url = url;
 	}
 
@@ -153,9 +153,9 @@ public class XmlParseException
 	public XmlParseException(AppException.IId id,
 							 File             file,
 							 String           location,
-							 String[]         substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		this(id, file, substitutionStrs);
+		this(id, file, replacements);
 		this.location = location;
 	}
 
@@ -164,9 +164,9 @@ public class XmlParseException
 	public XmlParseException(AppException.IId id,
 							 URL              url,
 							 String           location,
-							 String[]         substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		this(id, url, substitutionStrs);
+		this(id, url, replacements);
 		this.location = location;
 	}
 
@@ -176,9 +176,9 @@ public class XmlParseException
 							 File             file,
 							 String           location,
 							 String           value,
-							 String...        substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		this(id, file, location, substitutionStrs);
+		this(id, file, location, replacements);
 		this.value = value;
 	}
 
@@ -188,9 +188,9 @@ public class XmlParseException
 							 URL              url,
 							 String           location,
 							 String           value,
-							 String...        substitutionStrs)
+							 CharSequence...  replacements)
 	{
-		this(id, url, location, substitutionStrs);
+		this(id, url, location, replacements);
 		this.value = value;
 	}
 
@@ -199,8 +199,7 @@ public class XmlParseException
 	public XmlParseException(XmlParseException exception,
 							 File              file)
 	{
-		this(exception.getId(), file, exception.location, exception.value,
-			 exception.getSubstitutionStrings());
+		this(exception.getId(), file, exception.location, exception.value, exception.getReplacements());
 	}
 
 	//------------------------------------------------------------------
@@ -208,8 +207,7 @@ public class XmlParseException
 	public XmlParseException(XmlParseException exception,
 							 URL               url)
 	{
-		this(exception.getId(), url, exception.location, exception.value,
-			 exception.getSubstitutionStrings());
+		this(exception.getId(), url, exception.location, exception.value, exception.getReplacements());
 	}
 
 	//------------------------------------------------------------------
@@ -262,7 +260,7 @@ public class XmlParseException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	File	file;

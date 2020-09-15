@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import uk.blankaspect.common.exception.AppException;
+import uk.blankaspect.common.exception.ExceptionUtils;
 import uk.blankaspect.common.exception.FileException;
 
 //----------------------------------------------------------------------
@@ -121,7 +122,7 @@ public class FileAttributeUtils
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -311,32 +312,14 @@ public class FileAttributeUtils
 		String pathname = null;
 		try
 		{
-			try
-			{
-				pathname = file.getCanonicalPath();
-			}
-			catch (Exception e)
-			{
-				writeError(e);
-				pathname = file.getAbsolutePath();
-			}
+			pathname = file.getCanonicalPath();
 		}
-		catch (SecurityException e)
+		catch (Exception e)
 		{
-			writeError(e);
-			pathname = file.getPath();
+			ExceptionUtils.writeTopOfStack(e);
+			pathname = file.getAbsolutePath();
 		}
 		return pathname;
-	}
-
-	//------------------------------------------------------------------
-
-	private static void writeError(Exception e)
-	{
-		System.err.println(e);
-		StackTraceElement[] stackTraceElements = e.getStackTrace();
-		if (stackTraceElements.length > 0)
-			System.err.println(stackTraceElements[0]);
 	}
 
 	//------------------------------------------------------------------

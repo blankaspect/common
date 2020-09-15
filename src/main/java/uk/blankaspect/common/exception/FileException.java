@@ -63,9 +63,9 @@ public class FileException
 
 	public FileException(AppException.IId id,
 						 File             file,
-						 String...        substitutionStrs)
+						 CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.file = file;
 	}
 
@@ -74,9 +74,9 @@ public class FileException
 	public FileException(AppException.IId id,
 						 File             file,
 						 Throwable        cause,
-						 String...        substitutionStrs)
+						 CharSequence...  replacements)
 	{
-		super(id, cause, substitutionStrs);
+		super(id, cause, replacements);
 		this.file = file;
 	}
 
@@ -85,7 +85,7 @@ public class FileException
 	public FileException(AppException exception,
 						 File         file)
 	{
-		this(exception.getId(), file, exception.getCause(), exception.getSubstitutionStrings());
+		this(exception.getId(), file, exception.getCause(), exception.getReplacements());
 	}
 
 	//------------------------------------------------------------------
@@ -132,7 +132,7 @@ public class FileException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	File	file;

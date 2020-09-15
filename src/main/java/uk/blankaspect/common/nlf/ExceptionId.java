@@ -118,9 +118,6 @@ public enum ExceptionId
 
 	// Unchecked exceptions
 
-	UTF8_ENCODING_NOT_SUPPORTED
-	("This implementation of Java does not support the UTF-8 character encoding."),
-
 	RESERVED_IDENTIFIER
 	("The identifier is reserved."),
 
@@ -173,7 +170,7 @@ public enum ExceptionId
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	message;

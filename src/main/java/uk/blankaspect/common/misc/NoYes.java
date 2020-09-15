@@ -2,7 +2,7 @@
 
 NoYes.java
 
-No-Yes option enumeration.
+Enumeration: No-Yes option.
 
 \*====================================================================*/
 
@@ -15,7 +15,17 @@ package uk.blankaspect.common.misc;
 //----------------------------------------------------------------------
 
 
-// NO-YES OPTION ENUMERATION
+// IMPORTS
+
+
+import java.util.Arrays;
+
+import uk.blankaspect.common.string.StringUtils;
+
+//----------------------------------------------------------------------
+
+
+// ENUMERATION: NO-YES OPTION
 
 
 public enum NoYes
@@ -37,6 +47,12 @@ public enum NoYes
 	);
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String[]	keys;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
@@ -53,15 +69,10 @@ public enum NoYes
 
 	public static NoYes forKey(String key)
 	{
-		for (NoYes value : values())
-		{
-			for (String k : value.keys)
-			{
-				if (k.equals(key))
-					return value;
-			}
-		}
-		return null;
+		return Arrays.stream(values())
+						.filter(value -> Arrays.stream(value.keys).anyMatch(key0 -> key0.equals(key)))
+						.findFirst()
+						.orElse(null);
 	}
 
 	//------------------------------------------------------------------
@@ -91,6 +102,7 @@ public enum NoYes
 //  Instance methods : IStringKeyed interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public String getKey()
 	{
 		return keys[0];
@@ -120,12 +132,6 @@ public enum NoYes
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	String[]	keys;
 
 }
 

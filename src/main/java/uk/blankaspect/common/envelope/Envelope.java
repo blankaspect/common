@@ -2,7 +2,7 @@
 
 Envelope.java
 
-Envelope class.
+Class: envelope.
 
 \*====================================================================*/
 
@@ -31,13 +31,14 @@ import java.util.List;
 
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.misc.IntegerRange;
 import uk.blankaspect.common.misc.IStringKeyed;
+
+import uk.blankaspect.common.range.IntegerRange;
 
 //----------------------------------------------------------------------
 
 
-// ENVELOPE CLASS
+// CLASS: ENVELOPE
 
 
 public abstract class Envelope
@@ -59,7 +60,7 @@ public abstract class Envelope
 ////////////////////////////////////////////////////////////////////////
 
 
-	// ENVELOPE KIND
+	// ENUMERATION: ENVELOPE KIND
 
 
 	public enum Kind
@@ -93,6 +94,13 @@ public abstract class Envelope
 			"cubicSplineB",
 			"Cubic spline B"
 		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	key;
+		private	String	text;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -134,6 +142,7 @@ public abstract class Envelope
 	//  Instance methods : IStringKeyed interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getKey()
 		{
 			return key;
@@ -153,13 +162,6 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	key;
-		private	String	text;
-
 	}
 
 	//==================================================================
@@ -169,12 +171,19 @@ public abstract class Envelope
 ////////////////////////////////////////////////////////////////////////
 
 
-	// NODE CLASS
+	// CLASS: NODE
 
 
 	public abstract static class Node
 		implements Cloneable, Comparable<Node>
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		public	double	x;
+		public	boolean	fixedX;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constants
@@ -219,8 +228,8 @@ public abstract class Envelope
 
 		public static Rectangle getCaptureRectangle(Point point)
 		{
-			return new Rectangle(point.x - CAPTURE_HALF_WIDTH, point.y - CAPTURE_HALF_HEIGHT,
-								 CAPTURE_WIDTH, CAPTURE_HEIGHT);
+			return new Rectangle(point.x - CAPTURE_HALF_WIDTH, point.y - CAPTURE_HALF_HEIGHT, CAPTURE_WIDTH,
+								 CAPTURE_HEIGHT);
 		}
 
 		//--------------------------------------------------------------
@@ -234,8 +243,7 @@ public abstract class Envelope
 				x = applyNormalBounds((double)(point.x - EnvelopeView.LEFT_MARGIN) / (double)width);
 			double y = 0.0;
 			if (--height > 0)
-				y = applyNormalBounds((double)(height - point.y + EnvelopeView.TOP_MARGIN) /
-																						(double)height);
+				y = applyNormalBounds((double)(height - point.y + EnvelopeView.TOP_MARGIN) / (double)height);
 			return new Point2D.Double(x, y);
 		}
 
@@ -316,25 +324,25 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		public	double	x;
-		public	boolean	fixedX;
-
 	}
 
 	//==================================================================
 
 
-	// SIMPLE NODE CLASS
+	// CLASS: SIMPLE NODE
 
 
 	public static class SimpleNode
 		extends Node
 		implements Cloneable
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		public	double	y;
+		public	boolean	fixedY;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -405,8 +413,7 @@ public abstract class Envelope
 			if (--width > 0)
 				x = applyNormalBounds((double)(point.x - EnvelopeView.LEFT_MARGIN) / (double)width);
 			if (--height > 0)
-				y = applyNormalBounds((double)(height - point.y + EnvelopeView.TOP_MARGIN) /
-																						(double)height);
+				y = applyNormalBounds((double)(height - point.y + EnvelopeView.TOP_MARGIN) / (double)height);
 		}
 
 		//--------------------------------------------------------------
@@ -447,6 +454,7 @@ public abstract class Envelope
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public boolean isFixed(int bandIndex)
 		{
 			return (fixedX && fixedY);
@@ -454,6 +462,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public boolean isPartiallyFixed(int bandIndex)
 		{
 			return (fixedX || fixedY);
@@ -461,6 +470,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Point toPoint(int width,
 							 int height,
 							 int bandIndex)
@@ -480,19 +490,12 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		public	double	y;
-		public	boolean	fixedY;
-
 	}
 
 	//==================================================================
 
 
-	// COMPOUND NODE CLASS
+	// CLASS: COMPOUND NODE
 
 
 	public static class CompoundNode
@@ -505,6 +508,13 @@ public abstract class Envelope
 	////////////////////////////////////////////////////////////////////
 
 		private static final	int	MAX_NUM_ELEMENTS	= 32;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		public	double[]	y;
+		public	int			fixedY;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -609,13 +619,7 @@ public abstract class Envelope
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
-		public boolean isFixedY(int bandIndex)
-		{
-			return ((fixedY & 1 << bandIndex) != 0);
-		}
-
-		//--------------------------------------------------------------
-
+		@Override
 		public boolean isFixed(int bandIndex)
 		{
 			return (fixedX && isFixedY(bandIndex));
@@ -623,6 +627,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public boolean isPartiallyFixed(int bandIndex)
 		{
 			return (fixedX || isFixedY(bandIndex));
@@ -630,6 +635,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Point toPoint(int width,
 							 int height,
 							 int bandIndex)
@@ -637,8 +643,14 @@ public abstract class Envelope
 			--width;
 			--height;
 			return new Point(EnvelopeView.LEFT_MARGIN + (int)Math.round(x * (double)width),
-							 EnvelopeView.TOP_MARGIN + height - (int)Math.round(y[bandIndex] *
-																						(double)height));
+							 EnvelopeView.TOP_MARGIN + height - (int)Math.round(y[bandIndex] * (double)height));
+		}
+
+		//--------------------------------------------------------------
+
+		public boolean isFixedY(int bandIndex)
+		{
+			return ((fixedY & 1 << bandIndex) != 0);
 		}
 
 		//--------------------------------------------------------------
@@ -650,24 +662,25 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		public	double[]	y;
-		public	int			fixedY;
-
 	}
 
 	//==================================================================
 
 
-	// NODE IDENTIFIER CLASS
+	// CLASS: NODE IDENTIFIER
 
 
 	public static class NodeId
 		implements Cloneable
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		public	int	envelopeIndex;
+		public	int	bandIndex;
+		public	int	nodeIndex;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -715,8 +728,8 @@ public abstract class Envelope
 			if (obj instanceof NodeId)
 			{
 				NodeId id = (NodeId)obj;
-				return ((envelopeIndex == id.envelopeIndex) && (bandIndex == id.bandIndex) &&
-						 (nodeIndex == id.nodeIndex));
+				return ((envelopeIndex == id.envelopeIndex) && (bandIndex == id.bandIndex)
+							&& (nodeIndex == id.nodeIndex));
 			}
 			return false;
 		}
@@ -739,25 +752,25 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		public	int	envelopeIndex;
-		public	int	bandIndex;
-		public	int	nodeIndex;
-
 	}
 
 	//==================================================================
 
 
-	// SIMPLE ENVELOPE CLASS
+	// CLASS: SIMPLE ENVELOPE
 
 
 	public static class Simple
 		extends Envelope
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Color	segmentColour;
+		private	Color	nodeColour;
+		private	String	name;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -797,6 +810,7 @@ public abstract class Envelope
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public int getNumBands()
 		{
 			return 1;
@@ -804,6 +818,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Color getSegmentColour(int bandIndex)
 		{
 			return segmentColour;
@@ -811,6 +826,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Color getNodeColour(int bandIndex)
 		{
 			return nodeColour;
@@ -818,6 +834,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public String getName(int bandIndex)
 		{
 			return name;
@@ -829,6 +846,7 @@ public abstract class Envelope
 		 * @throws IllegalArgumentException
 		 */
 
+		@Override
 		public void setNodes(List<? extends Node> nodes,
 							 boolean              loop,
 							 boolean              forceLoop)
@@ -877,6 +895,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setSegmentColour(int   bandIndex,
 									 Color colour)
 		{
@@ -885,6 +904,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setNodeColour(int   bandIndex,
 								  Color colour)
 		{
@@ -893,6 +913,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setName(int    bandIndex,
 							String name)
 		{
@@ -901,25 +922,25 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	Color	segmentColour;
-		private	Color	nodeColour;
-		private	String	name;
-
 	}
 
 	//==================================================================
 
 
-	// COMPOUND ENVELOPE CLASS
+	// CLASS: COMPOUND ENVELOPE
 
 
 	public static class Compound
 		extends Envelope
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Color[]		segmentColours;
+		private	Color[]		nodeColours;
+		private	String[]	names;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -977,6 +998,7 @@ public abstract class Envelope
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public int getNumBands()
 		{
 			return segmentColours.length;
@@ -984,6 +1006,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Color getSegmentColour(int bandIndex)
 		{
 			return segmentColours[bandIndex];
@@ -991,6 +1014,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Color getNodeColour(int bandIndex)
 		{
 			return nodeColours[bandIndex];
@@ -998,6 +1022,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public String getName(int bandIndex)
 		{
 			return names[bandIndex];
@@ -1009,6 +1034,7 @@ public abstract class Envelope
 		 * @throws IllegalArgumentException
 		 */
 
+		@Override
 		public void setNodes(List<? extends Node> nodes,
 							 boolean              loop,
 							 boolean              forceLoop)
@@ -1063,6 +1089,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setSegmentColour(int   bandIndex,
 									 Color colour)
 		{
@@ -1071,6 +1098,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setNodeColour(int   bandIndex,
 								  Color colour)
 		{
@@ -1079,6 +1107,7 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setName(int    bandIndex,
 							String name)
 		{
@@ -1087,17 +1116,20 @@ public abstract class Envelope
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	Color[]		segmentColours;
-		private	Color[]		nodeColours;
-		private	String[]	names;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	Kind			kind;
+	private	IntegerRange	numNodesRange;
+	private	List<Node>		nodes;
+	private	int				bandMask;
+	private	boolean			loop;
+	private	double			minDeltaX;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -1237,9 +1269,9 @@ public abstract class Envelope
 
 	public void setNumNodesRange(IntegerRange range)
 	{
-		if ((range.lowerBound < MIN_NUM_NODES) || (range.lowerBound > MAX_NUM_NODES) ||
-			 (range.upperBound < MIN_NUM_NODES) || (range.upperBound > MAX_NUM_NODES) ||
-			 (range.upperBound < range.lowerBound))
+		if ((range.lowerBound < MIN_NUM_NODES) || (range.lowerBound > MAX_NUM_NODES)
+				|| (range.upperBound < MIN_NUM_NODES) || (range.upperBound > MAX_NUM_NODES)
+				|| (range.upperBound < range.lowerBound))
 			throw new IllegalArgumentException();
 		numNodesRange = range.clone();
 	}
@@ -1390,8 +1422,7 @@ public abstract class Envelope
 						gr.drawLine(p0.x, p0.y, p1.x, p1.y);
 					else
 					{
-						double a = 2.0 * (y1 - y0) / (x0 * x0 * (x0 - 3.0 * x1) - x1 * x1 *
-																						(x1 - 3.0 * x0));
+						double a = 2.0 * (y1 - y0) / (x0 * x0 * (x0 - 3.0 * x1) - x1 * x1 * (x1 - 3.0 * x0));
 						double b = -1.5 * a * (x0 + x1);
 						double c = 3.0 * a * x0 * x1;
 						double d = y0 + 0.5 * a * x0 * x0 * (x0 - 3.0 * x1);
@@ -1401,8 +1432,7 @@ public abstract class Envelope
 						{
 							double x = (double)(i - EnvelopeView.LEFT_MARGIN) * factor;
 							double y = ((a * x + b) * x + c) * x + d;
-							int currY = EnvelopeView.TOP_MARGIN + hMinus1 -
-																	(int)Math.round(y * (double)hMinus1);
+							int currY = EnvelopeView.TOP_MARGIN + hMinus1 - (int)Math.round(y * (double)hMinus1);
 							gr.drawLine(i - 1, prevY, i, currY);
 							prevY = currY;
 						}
@@ -1461,20 +1491,21 @@ public abstract class Envelope
 						node.setY(bandIndex, y2);
 					}
 
-					double dx10 = x1 - x0;
-					double dx20 = x2 - x0;
-					double dx10_2 = dx10 * dx10;
-					double dx10_3 = dx10_2 * dx10;
-					double dy10 = y1 - y0;
-					double dy20 = y2 - y0;
+					double dx01 = x1 - x0;
+					double dx02 = x2 - x0;
+					double dx01_2 = dx01 * dx01;
+					double dx01_3 = dx01_2 * dx01;
+					double dy01 = y1 - y0;
+					double dy02 = y2 - y0;
 
-					m0 = Double.isNaN(m1)
-										? dy10 / dx10 - dx10 / dx20 * ((y2 - y1) / (x2 - x1) - dy10 / dx10)
-										: m1;
-					m1 = dy20 / dx20;
+//XXX
+//					m0 = Double.isNaN(m1) ? dy01 / dx01 - dx01 / dx02 * ((y2 - y1) / (x2 - x1) - dy01 / dx01)
+					m0 = Double.isNaN(m1) ? dy01 / dx01
+										  : m1;
+					m1 = dy02 / dx02;
 
-					a = (m0 + m1) / dx10_2 - 2.0 * dy10 / dx10_3;
-					b = 3 * dy10 / dx10_2 - (2.0 * m0 + m1) / dx10;
+					a = (m0 + m1) / dx01_2 - 2.0 * dy01 / dx01_3;
+					b = 3 * dy01 / dx01_2 - (2.0 * m0 + m1) / dx01;
 
 					p0 = p1;
 					p1 = p2;
@@ -1487,8 +1518,7 @@ public abstract class Envelope
 						{
 							double dx = (double)(i - EnvelopeView.LEFT_MARGIN) * factor - x0;
 							double y = ((a * dx + b) * dx + m0) * dx + y0;
-							int currY = EnvelopeView.TOP_MARGIN + hMinus1 -
-																	(int)Math.round(y * (double)hMinus1);
+							int currY = EnvelopeView.TOP_MARGIN + hMinus1 - (int)Math.round(y * (double)hMinus1);
 							gr.drawLine(i - 1, prevY, i, currY);
 							prevY = currY;
 						}
@@ -1527,7 +1557,7 @@ public abstract class Envelope
 				{
 					if ((p0 == null) || (index < nodes.size()))
 					{
-						double prevDx10 = x1 - x0;
+						double prevDx01 = x1 - x0;
 
 						x0 = x1;
 						y0 = y1;
@@ -1550,20 +1580,21 @@ public abstract class Envelope
 							node.setY(bandIndex, y2);
 						}
 
-						double dx10 = x1 - x0;
-						double dx20 = x2 - x0;
-						double dx21 = x2 - x1;
-						double dx10_2 = dx10 * dx10;
-						double dx20_2 = dx20 * dx20;
-						double dy10 = y1 - y0;
-						double dy21 = y2 - y1;
+						double dx01 = x1 - x0;
+						double dx02 = x2 - x0;
+						double dx12 = x2 - x1;
+						double dx01_2 = dx01 * dx01;
+						double dx02_2 = dx02 * dx02;
+						double dy01 = y1 - y0;
+						double dy12 = y2 - y1;
 						if (Double.isNaN(m0))
-							m0 = dy10 / dx10 - dx10 / dx20 * (dy21 / dx21 - dy10 / dx10);
+//XXX
+//							m0 = dy01 / dx01 - dx01 / dx02 * (dy12 / dx12 - dy01 / dx01);
+							m0 = dy01 / dx01;
 						else
-							m0 += (3.0 * a * prevDx10 + 2.0 * b) * prevDx10;
-						a = dy21 / (dx21 * dx20_2) - dy10 * (dx10 + dx20) / (dx10_2 * dx20_2) +
-																						m0 / (dx10 * dx20);
-						b = dy10 / dx10_2 - a * dx10 - m0 / dx10;
+							m0 += (3.0 * a * prevDx01 + 2.0 * b) * prevDx01;
+						a = dy12 / (dx12 * dx02_2) - dy01 * (dx01 + dx02) / (dx01_2 * dx02_2) + m0 / (dx01 * dx02);
+						b = dy01 / dx01_2 - a * dx01 - m0 / dx01;
 					}
 
 					p0 = p1;
@@ -1577,8 +1608,7 @@ public abstract class Envelope
 						{
 							double dx = (double)(i - EnvelopeView.LEFT_MARGIN) * factor - x0;
 							double y = ((a * dx + b) * dx + m0) * dx + y0;
-							int currY = EnvelopeView.TOP_MARGIN + hMinus1 -
-																	(int)Math.round(y * (double)hMinus1);
+							int currY = EnvelopeView.TOP_MARGIN + hMinus1 - (int)Math.round(y * (double)hMinus1);
 							gr.drawLine(i - 1, prevY, i, currY);
 							prevY = currY;
 						}
@@ -1591,17 +1621,6 @@ public abstract class Envelope
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	Kind			kind;
-	private	IntegerRange	numNodesRange;
-	private	List<Node>		nodes;
-	private	int				bandMask;
-	private	boolean			loop;
-	private	double			minDeltaX;
 
 }
 

@@ -29,14 +29,15 @@ import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.gui.IProgressView;
-
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.ByteDataList;
 import uk.blankaspect.common.misc.FileWritingMode;
 import uk.blankaspect.common.misc.IProgressListener;
-import uk.blankaspect.common.misc.NumberUtils;
 import uk.blankaspect.common.misc.Task;
+
+import uk.blankaspect.common.number.NumberUtils;
+
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -128,7 +129,7 @@ public class RandomDataFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -342,7 +343,7 @@ public class RandomDataFile
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	byte[]			randomData;

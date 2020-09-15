@@ -31,7 +31,8 @@ import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
 import uk.blankaspect.common.misc.IProgressListener;
-import uk.blankaspect.common.misc.NumberUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -165,7 +166,7 @@ public class StreamConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -511,7 +512,7 @@ public class StreamConcealer
 
 		public void setDataDescription(String description)
 		{
-			setSubstitutionString(0, description);
+			setReplacement(0, description);
 		}
 
 		//--------------------------------------------------------------
@@ -580,7 +581,7 @@ public class StreamConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	InputStream	inputStream;
@@ -647,7 +648,7 @@ public class StreamConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	OutputStream	outputStream;
@@ -1236,7 +1237,7 @@ public class StreamConcealer
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<IProgressListener>	progressListeners;

@@ -2,7 +2,7 @@
 
 XmlConstants.java
 
-XML constants interface.
+Interface: XML constants
 
 \*====================================================================*/
 
@@ -15,7 +15,7 @@ package uk.blankaspect.common.xml;
 //----------------------------------------------------------------------
 
 
-// XML CONSTANTS INTERFACE
+// INTERFACE: XML CONSTANTS
 
 
 public interface XmlConstants
@@ -25,7 +25,15 @@ public interface XmlConstants
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	// XML predefined entities
+	/** The prefix of an entity */
+	String	ENTITY_PREFIX	= "&";
+
+	/** The suffix of an entity */
+	String	ENTITY_SUFFIX	= ";";
+
+	/**
+	 * The names of predefined entities
+	 */
 	interface EntityName
 	{
 		String	AMP		= "amp";
@@ -35,29 +43,35 @@ public interface XmlConstants
 		String	QUOT	= "quot";
 	}
 
-	String	ENTITY_PREFIX	= "&";
-	String	ENTITY_SUFFIX	= ";";
+	/**
+	 * Predefined entities
+	 */
+	interface Entity
+	{
+		String	AMP		= ENTITY_PREFIX + EntityName.AMP  + ENTITY_SUFFIX;
+		String	APOS	= ENTITY_PREFIX + EntityName.APOS + ENTITY_SUFFIX;
+		String	GT		= ENTITY_PREFIX + EntityName.GT   + ENTITY_SUFFIX;
+		String	LT		= ENTITY_PREFIX + EntityName.LT   + ENTITY_SUFFIX;
+		String	QUOT	= ENTITY_PREFIX + EntityName.QUOT + ENTITY_SUFFIX;
+	}
 
-	String	ENTITY_AMP	=   ENTITY_PREFIX + EntityName.AMP + ENTITY_SUFFIX;
-	String	ENTITY_APOS	=   ENTITY_PREFIX + EntityName.APOS + ENTITY_SUFFIX;
-	String	ENTITY_GT	=   ENTITY_PREFIX + EntityName.GT + ENTITY_SUFFIX;
-	String	ENTITY_LT	=   ENTITY_PREFIX + EntityName.LT + ENTITY_SUFFIX;
-	String	ENTITY_QUOT	=   ENTITY_PREFIX + EntityName.QUOT + ENTITY_SUFFIX;
-
-	// Path separator
+	/** The path-separator character */
 	char	PATH_SEPARATOR_CHAR	= '/';
+
+	/** The path separator */
 	String	PATH_SEPARATOR		= Character.toString(PATH_SEPARATOR_CHAR);
 
-	// Attribute prefix
+	/** The attribute-prefix character */
 	char	ATTRIBUTE_PREFIX_CHAR	= '@';
+
+	/** The attribute prefix */
 	String	ATTRIBUTE_PREFIX		= Character.toString(ATTRIBUTE_PREFIX_CHAR);
 
-	// Charset name
+	/** The name of the UTF-8 character encoding */
 	String	ENCODING_NAME_UTF8	= "UTF-8";
 
-	// Temporary-file prefix
+	/** The filename prefix of a temporary file */
 	String	TEMP_FILE_PREFIX	= "_$_";
-
 }
 
 //----------------------------------------------------------------------

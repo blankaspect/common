@@ -321,7 +321,7 @@ public enum VHPos
 	private VHPos(V v,
 				  H h)
 	{
-		// Initialise instance fields
+		// Initialise instance variables
 		this.v = v;
 		this.h = h;
 	}
@@ -359,7 +359,7 @@ public enum VHPos
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	/** The vertical position. */

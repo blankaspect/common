@@ -2,7 +2,7 @@
 
 Group.java
 
-Abstract IFF group class.
+Class: abstract IFF group.
 
 \*====================================================================*/
 
@@ -24,12 +24,11 @@ import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 //----------------------------------------------------------------------
 
 
-// ABSTRACT IFF GROUP CLASS
+// CLASS: ABSTRACT IFF GROUP
 
 
 public abstract class Group
@@ -43,14 +42,21 @@ public abstract class Group
 	public static final	int	HEADER_SIZE	= IffId.SIZE + SIZE_SIZE + IffId.SIZE;
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	protected	IffId		groupId;
+	protected	IffId		typeId;
+	protected	List<Chunk>	chunks;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
 	protected Group()
 	{
-		groupId = new IffId();
-		typeId = new IffId();
-		chunks = new Vector<>();
+		// Call alternative constructor
+		this(new IffId(), new IffId());
 	}
 
 	//------------------------------------------------------------------
@@ -58,6 +64,7 @@ public abstract class Group
 	protected Group(IffId groupId,
 					IffId typeId)
 	{
+		// Initialise instance variables
 		this.groupId = groupId;
 		this.typeId = typeId;
 		chunks = new ArrayList<>();
@@ -71,7 +78,10 @@ public abstract class Group
 
 	protected Group(byte[] headerBytes)
 	{
+		// Call alternative constructor
 		this();
+
+		// Set group ID and type ID
 		groupId.set(headerBytes);
 		typeId.set(headerBytes, Chunk.HEADER_SIZE);
 	}
@@ -208,14 +218,6 @@ public abstract class Group
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	protected	IffId		groupId;
-	protected	IffId		typeId;
-	protected	List<Chunk>	chunks;
 
 }
 

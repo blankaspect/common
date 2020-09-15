@@ -2,7 +2,7 @@
 
 ExceptionUtils.java
 
-Exception utilities class.
+Class: exception-related utilities.
 
 \*====================================================================*/
 
@@ -23,12 +23,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.blankaspect.common.misc.SystemUtils;
+import java.util.stream.Collectors;
+
+import uk.blankaspect.common.filesystem.PathnameUtils;
 
 //----------------------------------------------------------------------
 
 
-// EXCEPTION UTILITIES CLASS
+// CLASS: EXCEPTION-RELATED UTILITIES
 
 
 public class ExceptionUtils
@@ -38,8 +40,7 @@ public class ExceptionUtils
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	ELLIPSIS_STR		= "...";
-	private static final	String	USER_HOME_PREFIX	= "~";
+	private static final	String	ELLIPSIS_STR	= "...";
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -52,8 +53,84 @@ public class ExceptionUtils
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	boolean	unixStyle;
+
+////////////////////////////////////////////////////////////////////////
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
+
+	public static List<String> getCauseStrings(Throwable cause)
+	{
+		// Initialise list of cause strings
+		List<String> causes = new ArrayList<>();
+
+		// Add cause strings to list
+		while (cause != null)
+		{
+			// Get detail message of cause
+			String str = cause.getMessage();
+
+			// If there is no detail message, use string representation of cause
+			if (str == null)
+				str = cause.toString();
+
+			// Add string to list
+			causes.add(str);
+
+			// Get next exception in chain of causes
+			cause = cause.getCause();
+		}
+
+		// Return list of cause strings
+		return causes;
+	}
+
+	//------------------------------------------------------------------
+
+	public static String getCompositeCauseString(Throwable cause,
+												 String    prefix)
+	{
+		List<String> causeStrs = getCauseStrings(cause);
+		return causeStrs.isEmpty() ? "" : causeStrs.stream().collect(Collectors.joining("\n" + prefix, prefix, ""));
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Creates and returns a string representation of the specified instance of {@link Throwable}.
+	 *
+	 * @param  throwable
+	 *           the {@code Throwable} for which a string representation will be created.
+	 * @return a string representation of <i>throwable</i>.
+	 */
+
+	public static String throwableToString(Throwable throwable)
+	{
+		// Initialise buffer
+		StringBuilder buffer = new StringBuilder(256);
+
+		// Append detail message
+		String message = throwable.getMessage();
+		if (message != null)
+			buffer.append(message);
+
+		// Append string representation of chain of causes
+		Throwable cause = throwable.getCause();
+		if (cause != null)
+		{
+			if (buffer.length() > 0)
+				buffer.append('\n');
+			buffer.append(getCompositeCauseString(cause, "- "));
+		}
+
+		// Return string
+		return buffer.toString();
+	}
+
+	//------------------------------------------------------------------
 
 	public static boolean isUnixStyle()
 	{
@@ -74,19 +151,12 @@ public class ExceptionUtils
 		String pathname = null;
 		try
 		{
-			try
-			{
-				pathname = file.getCanonicalPath();
-			}
-			catch (Exception e)
-			{
-				pathname = file.getAbsolutePath();
-			}
+			pathname = file.getCanonicalPath();
 		}
-		catch (SecurityException e)
+		catch (Exception e)
 		{
-			writeError(e);
-			pathname = file.getPath();
+			writeTopOfStack(e);
+			pathname = file.getAbsolutePath();
 		}
 		return pathname;
 	}
@@ -98,19 +168,7 @@ public class ExceptionUtils
 	{
 		String pathname = getPathname(file);
 		if (unixStyle && (pathname != null))
-		{
-			try
-			{
-				String userHome = SystemUtils.getUserHomePathname();
-				if ((userHome != null) && pathname.startsWith(userHome))
-					pathname = USER_HOME_PREFIX + pathname.substring(userHome.length());
-			}
-			catch (SecurityException e)
-			{
-				// ignore
-			}
-			pathname = pathname.replace(File.separatorChar, '/');
-		}
+			pathname = PathnameUtils.toUnixStyle(pathname, true);
 
 		return getLimitedPathname(pathname, maxLength);
 	}
@@ -157,8 +215,7 @@ public class ExceptionUtils
 		if (numComponents == 0)
 		{
 			String str = strs.get(strs.size() - 1);
-			return (ELLIPSIS_STR + str.substring(Math.max(0, str.length() - maxLength +
-																			ELLIPSIS_STR.length())));
+			return (ELLIPSIS_STR + str.substring(Math.max(0, str.length() - maxLength + ELLIPSIS_STR.length())));
 		}
 
 		// If the entire pathname fits, return it
@@ -177,21 +234,18 @@ public class ExceptionUtils
 
 	//------------------------------------------------------------------
 
-	private static void writeError(Exception e)
+	public static void writeTopOfStack(Exception e)
 	{
+		// Write exception to standard error stream
 		System.err.println(e);
+
+		// Write top of stack to standard error stream
 		StackTraceElement[] stackTraceElements = e.getStackTrace();
 		if (stackTraceElements.length > 0)
 			System.err.println(stackTraceElements[0]);
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class fields
-////////////////////////////////////////////////////////////////////////
-
-	private static	boolean	unixStyle;
 
 }
 

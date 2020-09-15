@@ -18,6 +18,8 @@ package uk.blankaspect.common.regex;
 // IMPORTS
 
 
+import java.util.Arrays;
+
 import java.util.regex.PatternSyntaxException;
 
 //----------------------------------------------------------------------
@@ -76,7 +78,7 @@ public class RegexUtils
 	public static String escape(char ch)
 	{
 		return (METACHARACTERS.indexOf(ch) < 0) ? Character.toString(ch)
-												: new String(new char[]{ ESCAPE_PREFIX_CHAR, ch } );
+												: new String(new char[] { ESCAPE_PREFIX_CHAR, ch });
 	}
 
 	//------------------------------------------------------------------
@@ -124,6 +126,48 @@ public class RegexUtils
 			buffer.append(index);
 		}
 		return buffer.toString();
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Returns a regular expression that is created from the specified character sequences as follows:
+	 * <ol>
+	 *   <li>The sequences are joined together with the alternation operator, "|".</li>
+	 *   <li>The composite string is enclosed in parentheses to form a capturing group.</li>
+	 *   <li>Word-boundary matchers are added before and after the capturing group.</li>
+	 * </ol>
+	 * For example, the input sequences { "cat", "dog", "wombat" } will result in the pattern "\b(cat|dog|wombat)\b".
+	 *
+	 * @param  words
+	 *           the sequences that will be combined into a regular expression.
+	 * @return a regular expression that is created from <i>words</i> as described above.
+	 */
+
+	public static String joinAlternatives(Iterable<? extends CharSequence> words)
+	{
+		return "\\b(" + String.join("|", words) + ")\\b";
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Returns a regular expression that is created from the specified character sequences as follows:
+	 * <ol>
+	 *   <li>The sequences are joined together with the alternation operator, "|".</li>
+	 *   <li>The composite string is enclosed in parentheses to form a capturing group.</li>
+	 *   <li>Word-boundary matchers are added before and after the capturing group.</li>
+	 * </ol>
+	 * For example, the input sequences { "cat", "dog", "wombat" } will result in the pattern "\b(cat|dog|wombat)\b".
+	 *
+	 * @param  words
+	 *           the sequences that will be combined into a regular expression.
+	 * @return a regular expression that is created from <i>words</i> as described above.
+	 */
+
+	public static String joinAlternatives(CharSequence... words)
+	{
+		return joinAlternatives(Arrays.asList(words));
 	}
 
 	//------------------------------------------------------------------

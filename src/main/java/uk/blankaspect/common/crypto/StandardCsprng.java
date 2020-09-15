@@ -93,7 +93,7 @@ public class StandardCsprng
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -181,9 +181,8 @@ public class StandardCsprng
 	 *           keyboard and mouse events.
 	 */
 
-	public StandardCsprng(FortunaCipher                        cipher,
-						   Map<EntropyAccumulator.SourceKind,
-							   EntropyAccumulator.SourceParams> entropySourceParams)
+	public StandardCsprng(FortunaCipher                                                       cipher,
+						  Map<EntropyAccumulator.SourceKind, EntropyAccumulator.SourceParams> entropySourceParams)
 		throws AppException
 	{
 		this(cipher, entropySourceParams, DEFAULT_TIMER_DIVISOR);
@@ -210,15 +209,13 @@ public class StandardCsprng
 	 *           keyboard and mouse events.
 	 */
 
-	public StandardCsprng(FortunaCipher                        cipher,
-						   Map<EntropyAccumulator.SourceKind,
-							   EntropyAccumulator.SourceParams> entropySourceParams,
-						   int                                  timerDivisor)
+	public StandardCsprng(FortunaCipher                                                       cipher,
+						  Map<EntropyAccumulator.SourceKind, EntropyAccumulator.SourceParams> entropySourceParams,
+						  int                                                                 timerDivisor)
 		throws AppException
 	{
 		// Create the PRNG
-		prng = cipher.createPrng(CryptoUtils.getSeedFromNanoTime(cipher.getKeySize(),
-																 timerDivisor));
+		prng = cipher.createPrng(CryptoUtils.getSeedFromNanoTime(cipher.getKeySize(), timerDivisor));
 
 		// Create the entropy accumulator and set it as the supplier of entropy to the PRNG
 		entropyAccumulator = new EntropyAccumulator(entropySourceParams, timerDivisor);
@@ -453,7 +450,7 @@ public class StandardCsprng
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	Fortuna				prng;

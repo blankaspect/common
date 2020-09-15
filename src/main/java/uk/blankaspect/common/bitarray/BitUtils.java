@@ -27,7 +27,7 @@ import uk.blankaspect.common.math.MathUtils;
 
 
 /**
- * This class contains utility methods for bit manipulation.
+ * This class contains utility methods for manipulating bits.
  */
 
 public class BitUtils
@@ -52,33 +52,35 @@ public class BitUtils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Returns a bit mask for a specified length of a bit field.  A value of 0xFFFFFFFF is returned if {@code length}
-	 * {@literal >=} 32.
+	 * Returns a 32-bit mask for the specified length of a bit field.  A value of 0xFFFFFFFF is returned if the length
+	 * is greater than 31.
 	 *
-	 * @param  length  the length in bits of the bit field.
-	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFFFFFF if {@code length} {@literal >=}
-	 *         32.
+	 * @param  length
+	 *           the length in bits of the bit field.
+	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFFFFFF if <i>length</i> {@literal >=} 32.
 	 */
 
 	public static int lengthToMask(int length)
 	{
-		return ((length > 31) ? 0xFFFFFFFF : (1 << length) - 1);
+		return (length > 31) ? 0xFFFFFFFF : (1 << length) - 1;
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns a bit mask for a specified length and shift count of a bit field.
+	 * Returns a 32-bit mask for the specified length and shift count of a bit field.
 	 *
-	 * @param  shift   the index of the least significant bit of the bit field.
-	 * @param  length  the length in bits of the bit field.
-	 * @return a bit mask corresponding to the length of the bit field, shifted left by {@code shift} bits.
+	 * @param  shift
+	 *           the index of the least significant bit of the bit field.
+	 * @param  length
+	 *           the length in bits of the bit field.
+	 * @return a bit mask corresponding to the length of the bit field, shifted left by <i>shift</i> bits.
 	 */
 
 	public static int lengthToShiftedMask(int shift,
 										  int length)
 	{
-		return (lengthToMask(length) << shift);
+		return lengthToMask(length) << shift;
 	}
 
 	//------------------------------------------------------------------
@@ -86,8 +88,10 @@ public class BitUtils
 	/**
 	 * Tests the value of a bit of a 32-bit data value and returns the result.
 	 *
-	 * @param  data   the 32-bit data value of which a bit is to be tested.
-	 * @param  shift  the index of the bit to be tested.
+	 * @param  data
+	 *           the 32-bit data value whose bit will be tested.
+	 * @param  shift
+	 *           the index of the bit of <i>data</i> that will be tested.
 	 * @return {@code true} if the bit is set; {@code false} otherwise.
 	 */
 
@@ -100,68 +104,82 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Sets a specified bit of a 32-bit data value and returns the result.
+	 * Sets the specified bit of a 32-bit data value and returns the result.
 	 *
-	 * @param  data   the 32-bit data value of which a bit is to be set.
-	 * @param  shift  the index of the bit to be set.
-	 * @return the result of setting the bit in {@code data}.
+	 * @param  data
+	 *           the 32-bit data value whose bit will be set.
+	 * @param  shift
+	 *           the index of the bit of <i>data</i> that will be set.
+	 * @return the result of setting the bit of <i>data</i>.
 	 */
 
 	public static int setBit(int data,
 							 int shift)
 	{
-		return (data | 1 << shift);
+		return data | 1 << shift;
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Converts a value to a bit field and returns the result.  The conversion is performed by masking {@code value}
-	 * with a mask of {@code length} bits, then shifting the result left by {@code shift} bits.
+	 * Converts the specified value to a bit field and returns the result.  The conversion is performed by masking the
+	 * value with a mask of the specified length (in bits), then shifting the result left by the specified number of
+	 * bits.
 	 *
-	 * @param  value   the value that is to be set in the bit field.
-	 * @param  shift   the index of the least significant bit of the bit field.
-	 * @param  length  the length in bits of the bit field.
-	 * @return the value of the bit field (ie, {@code value} masked and shifted).
+	 * @param  value
+	 *           the value that will be represented by the bit field.
+	 * @param  shift
+	 *           the index of the least significant bit of the bit field.
+	 * @param  length
+	 *           the length (in bits) of the bit field.
+	 * @return <i>value</i> converted to a bit field by masking and shifting.
 	 */
 
 	public static int valueToBitField(int value,
 									  int shift,
 									  int length)
 	{
-		return ((value & lengthToMask(length)) << shift);
+		return (value & lengthToMask(length)) << shift;
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Extracts the value of a bit field from a 32-bit data value and returns the result.  The value is extracted by
-	 * shifting {@code data} right by {@code shift} bits, then masking the result with a mask of {@code length} bits.
+	 * Extracts the value of a bit field from the specified 32-bit data value and returns the result.  The value is
+	 * extracted by shifting the input data right by the specified number of bits, then masking the result with a mask
+	 * of the specified length (in bits).
 	 *
-	 * @param  data    the 32-bit data value from which a bit field is to be extracted.
-	 * @param  shift   the index of the least significant bit of the bit field.
-	 * @param  length  the length in bits of the bit field.
-	 * @return the bit field extracted from {@code data}.
+	 * @param  data
+	 *           the 32-bit data value from which a bit field will be extracted.
+	 * @param  shift
+	 *           the index of the least significant bit of the bit field.
+	 * @param  length
+	 *           the length (in bits) of the bit field.
+	 * @return the bit field that was extracted from <i>data</i>.
 	 */
 
 	public static int getBitField(int data,
 								  int shift,
 								  int length)
 	{
-		return ((data >>> shift) & lengthToMask(length));
+		return (data >>> shift) & lengthToMask(length);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Extracts the value of a bit field from a 32-bit data value and returns the sign-extended result.  The value is
-	 * extracted by shifting {@code data} right by {@code shift} bits, masking the result with a mask of {@code length}
-	 * bits, then sign-extending the masked value into the most significant bits of the result.
+	 * Extracts the value of a bit field from the specified 32-bit data value and returns the sign-extended result.  The
+	 * value is extracted by shifting the input data right by the specified number of bits, masking the result with a
+	 * mask of the specified length (in bits), then sign-extending the masked value into the most significant bits of
+	 * the result.
 	 *
-	 * @param  data    the 32-bit data value from which a bit field is to be extracted.
-	 * @param  shift   the index of the least significant bit of the bit field.
-	 * @param  length  the length in bits of the bit field.
-	 * @return the sign-extended bit field extracted from {@code data}.
+	 * @param  data
+	 *           the 32-bit data value from which a bit field will be extracted.
+	 * @param  shift
+	 *           the index of the least significant bit of the bit field.
+	 * @param  length
+	 *           the length (in bits) of the bit field.
+	 * @return the sign-extended bit field that was extracted from <i>data</i>.
 	 */
 
 	public static int getSignedBitField(int data,
@@ -178,15 +196,20 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Sets the value of a bit field in a 32-bit data value and returns the result.  The value is set by masking {@code
-	 * value} with a mask of {@code length} bits, shifting the result left by {@code shift} bits, then setting the
-	 * result in {@code data}, in which the bit field has been cleared.
+	 * Sets the specified value in a bit field of the specified 32-bit data value and returns the result.  The value is
+	 * set by masking the value with a mask of the specified length (in bits), shifting the result left by the specified
+	 * number of bits, then setting the result in the corresponding bit field of the data value.
 	 *
-	 * @param  data    the 32-bit data value in which a bit field is to be set.
-	 * @param  value   the value that is to be set in the bit field.
-	 * @param  shift   the index of the least significant bit of the bit field.
-	 * @param  length  the length in bits of the bit field.
-	 * @return the result of setting the bit field in {@code data}.
+	 * @param  data
+	 *           the 32-bit data value in which <i>value</i> will be set in the bit field that is defined by
+	 *           <i>shift</i> and <i>length</i>.
+	 * @param  value
+	 *           the value that will be set in the bit field of <i>data</i>.
+	 * @param  shift
+	 *           the index of the least significant bit of the bit field.
+	 * @param  length
+	 *           the length (in bits) of the bit field.
+	 * @return the result of setting <i>value</i> in a bit field of <i>data</i>.
 	 */
 
 	public static int setBitField(int data,
@@ -195,25 +218,33 @@ public class BitUtils
 								  int length)
 	{
 		int mask = lengthToMask(length);
-		return ((data & ~(mask << shift)) | ((value & mask) << shift));
+		return (data & ~(mask << shift)) | ((value & mask) << shift);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Interleaves the bits of a 32-bit integer value.  The effect of this method can be reversed with the
-	 * {@link #deinterleave(int, int, int, int) deinterleave} method.
+	 * Interleaves the bits of a 32-bit integer value.  The effect of this method can be reversed with the {@link
+	 * #deinterleave(int, int, int, int) deinterleave} method.
 	 *
-	 * @param  value       the value whose bits are to be interleaved.
-	 * @param  startIndex  the index of the bit of {@code value} at which the interleaving is to start.
-	 * @param  length      the length of {@code value} in bits.
-	 * @param  interval    the interval between input bits.
+	 * @param  value
+	 *           the value whose bits will be interleaved.
+	 * @param  startIndex
+	 *           the index of the bit of <i>value</i> at which the interleaving is to start.
+	 * @param  length
+	 *           the length of <i>value</i> in bits.
+	 * @param  interval
+	 *           the interval between input bits.
 	 * @return the input value with its bits interleaved.
 	 * @throws IllegalArgumentException
-	 *           if {@code length} is negative or greater than 32, or if {@code interval} is negative or
-	 *           zero, or if {@code interval} and {@code length} have a common factor greater than 1.
+	 *           if
+	 *           <ul>
+	 *             <li><i>length</i> is negative or greater than 32, or</li>
+	 *             <li><i>interval</i> is negative or zero, or</li>
+	 *             <li><i>interval</i> and <i>length</i> have a common factor greater than 1.</li>
+	 *           </ul>
 	 * @throws IndexOutOfBoundsException
-	 *           if {@code startIndex} is negative or greater than {@code length}.
+	 *           if <i>startIndex</i> is negative or greater than <i>length</i>.
 	 * @see    #deinterleave(int, int, int, int)
 	 */
 
@@ -248,19 +279,27 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Interleaves the bits of a 64-bit integer value.  The effect of this method can be reversed with the
-	 * {@link #deinterleave(long, int, int, int) deinterleave} method.
+	 * Interleaves the bits of a 64-bit integer value.  The effect of this method can be reversed with the{@link
+	 * #deinterleave(long, int, int, int) deinterleave} method.
 	 *
-	 * @param  value       the value whose bits are to be interleaved.
-	 * @param  startIndex  the index of the bit of {@code value} at which the interleaving is to start.
-	 * @param  length      the length of {@code value} in bits.
-	 * @param  interval    the interval between input bits.
+	 * @param  value
+	 *           the value whose bits will be interleaved.
+	 * @param  startIndex
+	 *           the index of the bit of <i>value</i> at which the interleaving is to start.
+	 * @param  length
+	 *           the length of <i>value</i> in bits.
+	 * @param  interval
+	 *           the interval between input bits.
 	 * @return the input value with its bits interleaved.
 	 * @throws IllegalArgumentException
-	 *           if {@code length} is negative or greater than 64, or if {@code interval} is negative or
-	 *           zero, or if {@code interval} and {@code length} have a common factor greater than 1.
+	 *           if
+	 *           <ul>
+	 *             <li><i>length</i> is negative or greater than 64, or</li>
+	 *             <li><i>interval</i> is negative or zero, or</li>
+	 *             <li><i>interval</i> and <i>length</i> have a common factor greater than 1.</li>
+	 *           </ul>
 	 * @throws IndexOutOfBoundsException
-	 *           if {@code startIndex} is negative or greater than {@code length}.
+	 *           if <i>startIndex</i> is negative or greater than <i>length</i>.
 	 * @see    #deinterleave(long, int, int, int)
 	 */
 
@@ -295,20 +334,27 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Deinterleaves the bits of a 32-bit integer value.  This method reverses the effect of the {@link
-	 * #interleave(int, int, int, int) interleave} method.
+	 * Deinterleaves the bits of a 32-bit integer value.  This method reverses the effect of the {@link #interleave(int,
+	 * int, int, int) interleave} method.
 	 *
-	 * @param  value       the value whose bits are to be deinterleaved.
-	 * @param  startIndex  the index of the bit of the <i>output</i> value at which the deinterleaving is to
-	 *                     start.
-	 * @param  length      the length of {@code value} in bits.
-	 * @param  interval    the interval between output bits.
+	 * @param  value
+	 *           the value whose bits will be deinterleaved.
+	 * @param  startIndex
+	 *           the index of the bit of the <b>output</b> value at which the deinterleaving is to start.
+	 * @param  length
+	 *           the length of <i>value</i> in bits.
+	 * @param  interval
+	 *           the interval between output bits.
 	 * @return the input value with its bits deinterleaved.
 	 * @throws IllegalArgumentException
-	 *           if {@code length} is negative or greater than 32, or if {@code interval} is negative or
-	 *           zero, or if {@code interval} and {@code length} have a common factor greater than 1.
+	 *           if
+	 *           <ul>
+	 *             <li><i>length</i> is negative or greater than 32, or</li>
+	 *             <li><i>interval</i> is negative or zero, or</li>
+	 *             <li><i>interval</i> and <i>length</i> have a common factor greater than 1.</li>
+	 *           </ul>
 	 * @throws IndexOutOfBoundsException
-	 *           if {@code startIndex} is negative or greater than {@code length}.
+	 *           if <i>startIndex</i> is negative or greater than <i>length</i>.
 	 * @see    #interleave(int, int, int, int)
 	 */
 
@@ -345,17 +391,24 @@ public class BitUtils
 	 * Deinterleaves the bits of a 64-bit integer value.  This method reverses the effect of the {@link
 	 * #interleave(long, int, int, int) interleave} method.
 	 *
-	 * @param  value       the value whose bits are to be deinterleaved.
-	 * @param  startIndex  the index of the bit of the <i>output</i> value at which the deinterleaving is to
-	 *                     start.
-	 * @param  length      the length of {@code value} in bits.
-	 * @param  interval    the interval between output bits.
+	 * @param  value
+	 *           the value whose bits will be deinterleaved.
+	 * @param  startIndex
+	 *           the index of the bit of the <b>output</b> value at which the deinterleaving is to start.
+	 * @param  length
+	 *           the length of <i>value</i> in bits.
+	 * @param  interval
+	 *           the interval between output bits.
 	 * @return the input value with its bits deinterleaved.
 	 * @throws IllegalArgumentException
-	 *           if {@code length} is negative or greater than 64, or if {@code interval} is negative or
-	 *           zero, or if {@code interval} and {@code length} have a common factor greater than 1.
+	 *           if
+	 *           <ul>
+	 *             <li><i>length</i> is negative or greater than 64, or</li>
+	 *             <li><i>interval</i> is negative or zero, or</li>
+	 *             <li><i>interval</i> and <i>length</i> have a common factor greater than 1.</li>
+	 *           </ul>
 	 * @throws IndexOutOfBoundsException
-	 *           if {@code startIndex} is negative or greater than {@code length}.
+	 *           if <i>startIndex</i> is negative or greater than <i>length</i>.
 	 * @see    #interleave(long, int, int, int)
 	 */
 

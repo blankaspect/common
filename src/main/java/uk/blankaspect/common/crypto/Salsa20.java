@@ -2,7 +2,7 @@
 
 Salsa20.java
 
-Salsa20 stream cipher class.
+Class: Salsa20 stream cipher.
 
 \*====================================================================*/
 
@@ -18,19 +18,17 @@ package uk.blankaspect.common.crypto;
 // IMPORTS
 
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.Arrays;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
-
 //----------------------------------------------------------------------
 
 
-// SALSA20 STREAM CIPHER CLASS
+// CLASS: SALSA20 STREAM CIPHER
 
 
 /**
@@ -45,82 +43,88 @@ public class Salsa20
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The number of bytes per word, as defined in the Salsa20 specification.
-	 */
-	public static final		int	BYTES_PER_WORD	= 4;
+	/** The number of bytes per word, as defined in the Salsa20 specification. */
+	public static final		int		BYTES_PER_WORD	= 4;
 
-	/**
-	 * The key size (in bits) of the cipher.
-	 */
-	public static final		int	KEY_SIZE_BITS		= 256;
+	/** The size (in bits) of the key of the cipher. */
+	public static final		int		KEY_SIZE_BITS		= 256;
 
-	/**
-	 * The key size (in bytes) of the cipher.
-	 */
-	public static final		int	KEY_SIZE			= KEY_SIZE_BITS / Byte.SIZE;
+	/** The size (in bytes) of the key of the cipher. */
+	public static final		int		KEY_SIZE			= KEY_SIZE_BITS / Byte.SIZE;
 
-	/**
-	 * The key size (in 32-bit words) of the cipher.
-	 */
-	public static final		int	KEY_SIZE_WORDS		= KEY_SIZE / BYTES_PER_WORD;
+	/** The size (in 32-bit words) of the key of the cipher. */
+	public static final		int		KEY_SIZE_WORDS		= KEY_SIZE / BYTES_PER_WORD;
 
-	/**
-	 * The nonce size (in bytes) of the cipher.
-	 */
-	public static final		int	NONCE_SIZE			= 8;
+	/** The size (in bytes) of the of the nonce of the cipher. */
+	public static final		int		NONCE_SIZE			= 8;
 
-	/**
-	 * The nonce size (in 32-bit words) of the cipher.
-	 */
-	public static final		int	NONCE_SIZE_WORDS	= NONCE_SIZE / BYTES_PER_WORD;
+	/** The size (in 32-bit words) of the of the nonce of the cipher. */
+	public static final		int		NONCE_SIZE_WORDS	= NONCE_SIZE / BYTES_PER_WORD;
 
-	/**
-	 * The counter size (in bytes) of the cipher.
-	 */
-	public static final		int	COUNTER_SIZE		= 8;
+	/** The size (in bytes) of the counter of the cipher. */
+	public static final		int		COUNTER_SIZE		= 8;
 
-	/**
-	 * The counter size (in bytes) of the cipher.
-	 */
-	public static final		int	COUNTER_SIZE_WORDS	= COUNTER_SIZE / BYTES_PER_WORD;
+	/** The counter size (in 32-bit words) of the cipher. */
+	public static final		int		COUNTER_SIZE_WORDS	= COUNTER_SIZE / BYTES_PER_WORD;
 
-	/**
-	 * The block size (in bytes) of the cipher.
-	 */
-	public static final		int	BLOCK_SIZE			= 64;
+	/** The size (in bytes) of the blocks of the cipher. */
+	public static final		int		BLOCK_SIZE			= 64;
 
-	/**
-	 * The block size (in 32-bit words) of the cipher.
-	 */
-	public static final		int	BLOCK_SIZE_WORDS	= BLOCK_SIZE / BYTES_PER_WORD;
+	/** The size (in 32-bit words) of a block of the cipher. */
+	public static final		int		BLOCK_SIZE_WORDS	= BLOCK_SIZE / BYTES_PER_WORD;
 
-	private static final	int	KEY1_OFFSET				= 1;
-	private static final	int	NONCE_OFFSET			= 6;
-	private static final	int	BLOCK_COUNTER_OFFSET	= 8;
-	private static final	int	KEY2_OFFSET				= 11;
+	/** The offset to the first half of the key in the input block. */
+	private static final	int		KEY1_OFFSET		= 1;
 
-	private static final	int[]	CONSTANT_WORDS_32	=
+	/** The offset to the second half of the key in the input block. */
+	private static final	int		KEY2_OFFSET		= 11;
+
+	/** The offset to the nonce in the input block. */
+	private static final	int		NONCE_OFFSET	= 6;
+
+	/** The offset to the block counter in the input block. */
+	private static final	int		COUNTER_OFFSET	= 8;
+
+	/** The constant values that are put into the input block. */
+	private static final	int[]	CONSTANT_WORDS	=
 	{
 		0x61707865, 0x3320646E, 0x79622D32, 0x6B206574
 	};
 
-	private static final	String	ENCODING_NAME	= "UTF-8";
-	private static final	String	HASH_NAME		= "SHA-256";
+	/** The name of the hash function. */
+	private static final	String	HASH_NAME	= "SHA-256";
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	/** The number of rounds of the Salsa20 core hash function. */
+	private	int		numRounds;
+
+	/** The block counter. */
+	private	long	blockCounter;
+
+	/** The input block. */
+	private	int[]	inBlock;
+
+	/** The output block. */
+	private	int[]	outBlock;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and a specified number of
-	 * rounds of the Salsa20 core hash function.
+	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and the specified number of rounds of
+	 * the core hash function.
 	 *
-	 * @param numRounds  the number of rounds of the Salsa20 core hash function that will be performed.
+	 * @param numRounds
+	 *          the number of rounds of the core hash function that will be performed.
 	 */
 
 	public Salsa20(int numRounds)
 	{
+		// Initialise instance variables
 		this.numRounds = numRounds;
 		inBlock = new int[BLOCK_SIZE_WORDS];
 		outBlock = new int[BLOCK_SIZE_WORDS];
@@ -129,54 +133,62 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and a specified number of
-	 * rounds of the Salsa20 core hash function, and initialises the cipher with a specified key and nonce.
+	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and the specified number of rounds of
+	 * the core hash function, and initialises the cipher with the specified key and nonce.
 	 *
-	 * @param  numRounds  the number of rounds of the Salsa20 core hash function that will be performed.
-	 * @param  key        the key that will be used for the cipher.
-	 * @param  nonce      the nonce that will be used in the cipher.
+	 * @param  numRounds
+	 *           the number of rounds of the core hash function that will be performed.
+	 * @param  key
+	 *           the key that will be used for the cipher.
+	 * @param  nonce
+	 *           the nonce that will be used in the cipher.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
-	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 8, or</li>
-	 *             <li>{@code nonce} is {@code null} or the length of {nonce key} is not 2.</li>
+	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 32, or</li>
+	 *             <li>{@code nonce} is {@code null} or the length of {@code nonce} is not 8.</li>
 	 *           </ul>
 	 */
 
 	public Salsa20(int numRounds,
-					int key[],
-					int nonce[])
+				   int key[],
+				   int nonce[])
 	{
-		this.numRounds = numRounds;
-		inBlock = new int[BLOCK_SIZE_WORDS];
-		outBlock = new int[BLOCK_SIZE_WORDS];
+		// Call alternative constructor
+		this(numRounds);
+
+		// Initialise input block
 		init(key, nonce);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and a specified number of
-	 * rounds of the Salsa20 core hash function, and initialises the cipher with a specified key and nonce.
+	 * Creates an implementation of the Salsa20 stream cipher with a 256-bit key and the specified number of rounds of
+	 * the core hash function, and initialises the cipher with the specified key and nonce.
 	 *
-	 * @param  numRounds  the number of rounds of the Salsa20 core hash function that will be performed.
-	 * @param  key        the key that will be used for the cipher.
-	 * @param  nonce      the nonce that will be used in the cipher.
+	 * @param  numRounds
+	 *           the number of rounds of the core hash function that will be performed.
+	 * @param  key
+	 *           the key that will be used for the cipher.
+	 * @param  nonce
+	 *           the nonce that will be used in the cipher.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
-	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 8, or</li>
-	 *             <li>{@code nonce} is {@code null} or the length of {nonce key} is not 2.</li>
+	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 32, or</li>
+	 *             <li>{@code nonce} is {@code null} or the length of {@code nonce} is not 8.</li>
 	 *           </ul>
 	 */
 
 	public Salsa20(int  numRounds,
-					byte key[],
-					byte nonce[])
+				   byte key[],
+				   byte nonce[])
 	{
-		this.numRounds = numRounds;
-		inBlock = new int[BLOCK_SIZE_WORDS];
-		outBlock = new int[BLOCK_SIZE_WORDS];
+		// Call alternative constructor
+		this(numRounds);
+
+		// Initialise input block
 		init(key, nonce);
 	}
 
@@ -187,61 +199,60 @@ public class Salsa20
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Converts a specified string to a 32-byte sequence, and returns it.  The byte sequence, which is an
-	 * SHA-256 hash of the UTF-8 encoding of {@code str}, is suitable for use as the key of a Salsa20
-	 * cipher.
+	 * Converts the specified string to a 32-byte sequence, and returns it.  The byte sequence, which is an SHA-256 hash
+	 * of the UTF-8 encoding of {@code str}, is suitable for use as the key of a Salsa20 cipher.
 	 *
-	 * @param  str  the string that will be converted.
+	 * @param  str
+	 *           the string that will be converted.
 	 * @return a SHA-256 hash of the UTF-8 encoding of {@code str}.
-	 * @throws UnexpectedRuntimeException
-	 *           if the UTF-8 character encoding is not supported by the Java implementation or the {@link
-	 *           java.security.MessageDigest} class does not support the SHA-256 algorithm.  (Every
-	 *           implementation of the Java platform is required to support the UTF-8 character encoding and
-	 *           the SHA-256 algorithm.)
+	 * @throws RuntimeException
+	 *           if the {@link MessageDigest} class does not support the SHA-256 algorithm.  (Every implementation of
+	 *           the Java platform is required to support the SHA-256 algorithm.)
 	 */
 
 	public static byte[] stringToKey(String str)
 	{
 		try
 		{
-			return MessageDigest.getInstance(HASH_NAME).digest(str.getBytes(ENCODING_NAME));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new UnexpectedRuntimeException(e);
+			return MessageDigest.getInstance(HASH_NAME).digest(str.getBytes(StandardCharsets.UTF_8));
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			throw new UnexpectedRuntimeException(e);
+			throw new RuntimeException("Unexpected exception", e);
 		}
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Converts a specified sequence of four bytes in little-endian format to a 32-bit word, and returns it.
+	 * Converts the specified sequence of four bytes in little-endian format to a 32-bit word, and returns it.
 	 *
-	 * @param  data    the sequence of four bytes that will be converted.
-	 * @param  offset  the start offset of the sequence in {@code data}.
+	 * @param  data
+	 *           the sequence of four bytes that will be converted.
+	 * @param  offset
+	 *           the start offset of the sequence in {@code data}.
 	 * @return the 32-bit word that resulted from converting from the input sequence.
 	 */
 
 	public static int bytesToWord(byte[] data,
 								  int    offset)
 	{
-		return ((data[offset++] & 0xFF) | (data[offset++] & 0xFF) << 8 | (data[offset++] & 0xFF) << 16 |
-																			(data[offset++] & 0xFF) << 24);
+		return ((data[offset++] & 0xFF) | (data[offset++] & 0xFF) << 8 | (data[offset++] & 0xFF) << 16
+																				| (data[offset++] & 0xFF) << 24);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Converts a specified 32-bit word to a sequence of four bytes and stores the byte sequence in a
-	 * specified buffer.
+	 * Converts the specified 32-bit word to a sequence of four bytes and stores the byte sequence in the specified
+	 * buffer.
 	 *
-	 * @param value   the word value that will be converted.
-	 * @param buffer  the buffer in which the byte sequence will be stored.
-	 * @param offset  the offset in {@code buffer} at which the first byte of the sequence will be stored.
+	 * @param value
+	 *          the word value that will be converted.
+	 * @param buffer
+	 *          the buffer in which the byte sequence will be stored.
+	 * @param offset
+	 *          the offset in {@code buffer} at which the first byte of the sequence will be stored.
 	 */
 
 	public static void wordToBytes(int    value,
@@ -257,158 +268,198 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Performs a specified number of rounds of the Salsa20 core hash function on a specified block of data.
+	 * Performs the specified number of rounds of the Salsa20 core hash function on the specified block of data.
 	 *
-	 * @param inData     the data that will be hashed.
-	 * @param outBuffer  a buffer in which the hashed data will be stored.
-	 * @param numRounds  the number of rounds of the Salsa20 core hash function that will be performed.
+	 * @param inData
+	 *          the data that will be hashed.
+	 * @param outBuffer
+	 *          a buffer in which the hashed data will be stored.
+	 * @param numRounds
+	 *          the number of rounds of the Salsa20 core hash function that will be performed.
 	 */
 
 	public static void hash(int[] inData,
 							int[] outBuffer,
 							int   numRounds)
 	{
-		// Copy input array to output array
-		System.arraycopy(inData, 0, outBuffer, 0, inData.length);
+		// Initialise variables from the input data
+		int x0  = inData[0];
+		int x1  = inData[1];
+		int x2  = inData[2];
+		int x3  = inData[3];
+		int x4  = inData[4];
+		int x5  = inData[5];
+		int x6  = inData[6];
+		int x7  = inData[7];
+		int x8  = inData[8];
+		int x9  = inData[9];
+		int x10 = inData[10];
+		int x11 = inData[11];
+		int x12 = inData[12];
+		int x13 = inData[13];
+		int x14 = inData[14];
+		int x15 = inData[15];
 
-		// Modify data
-		int a = 0;
-		int b = 0;
-		numRounds /= 2;
+		// Transform the input data
+		int q = 0;
+		int r = 0;
+		numRounds >>= 1;
 		for (int i = 0; i < numRounds; i++)
 		{
-			a = outBuffer[0] + outBuffer[12];
-			b = 7;
-			outBuffer[ 4] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 1.1
+			q = x0 + x12;
+			r = 7;
+			x4 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[4] + outBuffer[0];
-			b = 9;
-			outBuffer[ 8] ^= (a << b) | (a >>> (32 - b));
+			q = x4 + x0;
+			r = 9;
+			x8 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[8] + outBuffer[4];
-			b = 13;
-			outBuffer[12] ^= (a << b) | (a >>> (32 - b));
+			q = x8 + x4;
+			r = 13;
+			x12 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[12] + outBuffer[8];
-			b = 18;
-			outBuffer[ 0] ^= (a << b) | (a >>> (32 - b));
+			q = x12 + x8;
+			r = 18;
+			x0 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[5] + outBuffer[1];
-			b = 7;
-			outBuffer[ 9] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 1.2
+			q = x5 + x1;
+			r = 7;
+			x9 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[9] + outBuffer[5];
-			b = 9;
-			outBuffer[13] ^= (a << b) | (a >>> (32 - b));
+			q = x9 + x5;
+			r = 9;
+			x13 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[13] + outBuffer[9];
-			b = 13;
-			outBuffer[ 1] ^= (a << b) | (a >>> (32 - b));
+			q = x13 + x9;
+			r = 13;
+			x1 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[1] + outBuffer[13];
-			b = 18;
-			outBuffer[ 5] ^= (a << b) | (a >>> (32 - b));
+			q = x1 + x13;
+			r = 18;
+			x5 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[10] + outBuffer[6];
-			b = 7;
-			outBuffer[14] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 1.3
+			q = x10 + x6;
+			r = 7;
+			x14 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[14] + outBuffer[10];
-			b = 9;
-			outBuffer[ 2] ^= (a << b) | (a >>> (32 - b));
+			q = x14 + x10;
+			r = 9;
+			x2 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[2] + outBuffer[14];
-			b = 13;
-			outBuffer[ 6] ^= (a << b) | (a >>> (32 - b));
+			q = x2 + x14;
+			r = 13;
+			x6 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[6] + outBuffer[2];
-			b = 18;
-			outBuffer[10] ^= (a << b) | (a >>> (32 - b));
+			q = x6 + x2;
+			r = 18;
+			x10 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[15] + outBuffer[11];
-			b = 7;
-			outBuffer[ 3] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 1.4
+			q = x15 + x11;
+			r = 7;
+			x3 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[3] + outBuffer[15];
-			b = 9;
-			outBuffer[ 7] ^= (a << b) | (a >>> (32 - b));
+			q = x3 + x15;
+			r = 9;
+			x7 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[7] + outBuffer[3];
-			b = 13;
-			outBuffer[11] ^= (a << b) | (a >>> (32 - b));
+			q = x7 + x3;
+			r = 13;
+			x11 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[11] + outBuffer[7];
-			b = 18;
-			outBuffer[15] ^= (a << b) | (a >>> (32 - b));
+			q = x11 + x7;
+			r = 18;
+			x15 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[0] + outBuffer[3];
-			b = 7;
-			outBuffer[ 1] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 2.1
+			q = x0 + x3;
+			r = 7;
+			x1 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[1] + outBuffer[0];
-			b = 9;
-			outBuffer[ 2] ^= (a << b) | (a >>> (32 - b));
+			q = x1 + x0;
+			r = 9;
+			x2 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[2] + outBuffer[1];
-			b = 13;
-			outBuffer[ 3] ^= (a << b) | (a >>> (32 - b));
+			q = x2 + x1;
+			r = 13;
+			x3 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[3] + outBuffer[2];
-			b = 18;
-			outBuffer[ 0] ^= (a << b) | (a >>> (32 - b));
+			q = x3 + x2;
+			r = 18;
+			x0 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[5] + outBuffer[4];
-			b = 7;
-			outBuffer[ 6] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 2.2
+			q = x5 + x4;
+			r = 7;
+			x6 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[6] + outBuffer[5];
-			b = 9;
-			outBuffer[ 7] ^= (a << b) | (a >>> (32 - b));
+			q = x6 + x5;
+			r = 9;
+			x7 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[7] + outBuffer[6];
-			b = 13;
-			outBuffer[ 4] ^= (a << b) | (a >>> (32 - b));
+			q = x7 + x6;
+			r = 13;
+			x4 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[4] + outBuffer[7];
-			b = 18;
-			outBuffer[ 5] ^= (a << b) | (a >>> (32 - b));
+			q = x4 + x7;
+			r = 18;
+			x5 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[10] + outBuffer[9];
-			b = 7;
-			outBuffer[11] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 2.3
+			q = x10 + x9;
+			r = 7;
+			x11 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[11] + outBuffer[10];
-			b = 9;
-			outBuffer[ 8] ^= (a << b) | (a >>> (32 - b));
+			q = x11 + x10;
+			r = 9;
+			x8 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[8] + outBuffer[11];
-			b = 13;
-			outBuffer[ 9] ^= (a << b) | (a >>> (32 - b));
+			q = x8 + x11;
+			r = 13;
+			x9 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[9] + outBuffer[8];
-			b = 18;
-			outBuffer[10] ^= (a << b) | (a >>> (32 - b));
+			q = x9 + x8;
+			r = 18;
+			x10 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[15] + outBuffer[14];
-			b = 7;
-			outBuffer[12] ^= (a << b) | (a >>> (32 - b));
+			// Quarter-round 2.4
+			q = x15 + x14;
+			r = 7;
+			x12 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[12] + outBuffer[15];
-			b = 9;
-			outBuffer[13] ^= (a << b) | (a >>> (32 - b));
+			q = x12 + x15;
+			r = 9;
+			x13 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[13] + outBuffer[12];
-			b = 13;
-			outBuffer[14] ^= (a << b) | (a >>> (32 - b));
+			q = x13 + x12;
+			r = 13;
+			x14 ^= (q << r) | (q >>> (32 - r));
 
-			a = outBuffer[14] + outBuffer[13];
-			b = 18;
-			outBuffer[15] ^= (a << b) | (a >>> (32 - b));
+			q = x14 + x13;
+			r = 18;
+			x15 ^= (q << r) | (q >>> (32 - r));
 		}
 
-		// Add the input data to the output data
-		for (int i = 0; i < outBuffer.length; i++)
-			outBuffer[i] += inData[i];
+		// Set the output data to the sum of the input data and the transformed data
+		outBuffer[0]  = inData[0]  + x0;
+		outBuffer[1]  = inData[1]  + x1;
+		outBuffer[2]  = inData[2]  + x2;
+		outBuffer[3]  = inData[3]  + x3;
+		outBuffer[4]  = inData[4]  + x4;
+		outBuffer[5]  = inData[5]  + x5;
+		outBuffer[6]  = inData[6]  + x6;
+		outBuffer[7]  = inData[7]  + x7;
+		outBuffer[8]  = inData[8]  + x8;
+		outBuffer[9]  = inData[9]  + x9;
+		outBuffer[10] = inData[10] + x10;
+		outBuffer[11] = inData[11] + x11;
+		outBuffer[12] = inData[12] + x12;
+		outBuffer[13] = inData[13] + x13;
+		outBuffer[14] = inData[14] + x14;
+		outBuffer[15] = inData[15] + x15;
 	}
 
 	//------------------------------------------------------------------
@@ -435,17 +486,17 @@ public class Salsa20
 		}
 		catch (CloneNotSupportedException e)
 		{
-			throw new UnexpectedRuntimeException(e);
+			throw new RuntimeException("Unexpected exception", e);
 		}
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns {@code true} if this cipher is equal to a specified object.
+	 * Returns {@code true} if this cipher is equal to the specified object.
 	 * <p>
-	 * This cipher is considered to be equal to another object if the object is an instance of {@code
-	 * Salsa20} and the keys and nonces of the two objects are equal.
+	 * This cipher is considered to be equal to another object if the object is an instance of {@code Salsa20} and the
+	 * keys and nonces of the two objects are equal.
 	 * </p>
 	 *
 	 * @return {@code true} if this cipher is equal to the specified object, {@code false} otherwise.
@@ -454,6 +505,9 @@ public class Salsa20
 	@Override
 	public boolean equals(Object obj)
 	{
+		if (this == obj)
+			return true;
+
 		if (obj instanceof Salsa20)
 		{
 			Salsa20 salsa20 = (Salsa20)obj;
@@ -491,21 +545,27 @@ public class Salsa20
 
 	public byte[] getKey()
 	{
+		// Allocate array for key
 		byte[] key = new byte[KEY_SIZE];
+
+		// Initialise offset
 		int offset = 0;
 
+		// Get first half of key from input block
 		for (int i = KEY1_OFFSET; i < KEY1_OFFSET + KEY_SIZE_WORDS / 2; i++)
 		{
 			wordToBytes(inBlock[i], key, offset);
 			offset += BYTES_PER_WORD;
 		}
 
+		// Get second half of key from input block
 		for (int i = KEY2_OFFSET; i < KEY2_OFFSET + KEY_SIZE_WORDS / 2; i++)
 		{
 			wordToBytes(inBlock[i], key, offset);
 			offset += BYTES_PER_WORD;
 		}
 
+		// Return key
 		return key;
 	}
 
@@ -520,24 +580,30 @@ public class Salsa20
 
 	public byte[] getNonce()
 	{
+		// Allocate array for nonce
 		byte[] nonce = new byte[NONCE_SIZE];
+
+		// Initialise offset
 		int offset = 0;
 
+		// Get nonce from input block
 		for (int i = NONCE_OFFSET; i < NONCE_OFFSET + NONCE_SIZE_WORDS; i++)
 		{
 			wordToBytes(inBlock[i], nonce, offset);
 			offset += BYTES_PER_WORD;
 		}
 
+		// Return nonce
 		return nonce;
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns the current value of the block counter of this cipher.
+	 * Returns the value of the block counter of this cipher.
 	 *
-	 * @return the current value of the block counter of this cipher.
+	 * @return the value of the block counter of this cipher.
+	 * @see    #setBlockCounter(long)
 	 * @see    #getNextBlock(byte[], int)
 	 */
 
@@ -549,9 +615,25 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
+	 * Sets the block counter of this cipher to the specified value.
+	 *
+	 * @param counter
+	 *          the value to which the block counter will be set.
+	 * @see   #getBlockCounter()
+	 * @see   #getNextBlock(byte[], int)
+	 */
+
+	public void setBlockCounter(long counter)
+	{
+		blockCounter = counter;
+	}
+
+	//------------------------------------------------------------------
+
+	/**
 	 * Resets this cipher.
 	 * <p>
-	 * This method resets the block counter.
+	 * The block counter is reset to zero.
 	 * </p>
 	 */
 
@@ -563,15 +645,17 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Initialises this cipher with a specified key and nonce.
+	 * Initialises this cipher with the specified key and nonce.
 	 *
-	 * @param  key    the key that will be used for the cipher.
-	 * @param  nonce  the nonce that will be used in the cipher.
+	 * @param  key
+	 *           the key that will be used for the cipher.
+	 * @param  nonce
+	 *           the nonce that will be used in the cipher.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
 	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 32, or</li>
-	 *             <li>{@code nonce} is {@code null} or the length of {nonce key} is not 8.</li>
+	 *             <li>{@code nonce} is {@code null} or the length of {@code nonce} is not 8.</li>
 	 *           </ul>
 	 * @see    #init(int[], int[])
 	 */
@@ -580,8 +664,14 @@ public class Salsa20
 					 byte[] nonce)
 	{
 		// Validate arguments
-		if ((key == null) || (key.length != KEY_SIZE) || (nonce == null) || (nonce.length != NONCE_SIZE))
-			throw new IllegalArgumentException();
+		if (key == null)
+			throw new IllegalArgumentException("Null key");
+		if (key.length != KEY_SIZE)
+			throw new IllegalArgumentException("Incorrect key size");
+		if (nonce == null)
+			throw new IllegalArgumentException("Null nonce");
+		if (nonce.length != NONCE_SIZE)
+			throw new IllegalArgumentException("Incorrect nonce size");
 
 		// Convert key to words
 		int[] keyWords = new int[KEY_SIZE_WORDS];
@@ -608,15 +698,17 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Initialises this cipher with a specified key and nonce.
+	 * Initialises this cipher with the specified key and nonce.
 	 *
-	 * @param  key    the key that will be used for the cipher.
-	 * @param  nonce  the nonce that will be used in the cipher.
+	 * @param  key
+	 *           the key that will be used for the cipher.
+	 * @param  nonce
+	 *           the nonce that will be used in the cipher.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
-	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 8, or</li>
-	 *             <li>{@code nonce} is {@code null} or the length of {nonce key} is not 2.</li>
+	 *             <li>{@code key} is {@code null} or the length of {@code key} is not 32, or</li>
+	 *             <li>{@code nonce} is {@code null} or the length of {@code nonce} is not 8.</li>
 	 *           </ul>
 	 * @see    #init(byte[], byte[])
 	 */
@@ -625,9 +717,14 @@ public class Salsa20
 					 int[] nonce)
 	{
 		// Validate arguments
-		if ((key == null) || (key.length != KEY_SIZE_WORDS) ||
-			 (nonce == null) || (nonce.length != NONCE_SIZE_WORDS))
-			throw new IllegalArgumentException();
+		if (key == null)
+			throw new IllegalArgumentException("Null key");
+		if (key.length != KEY_SIZE_WORDS)
+			throw new IllegalArgumentException("Incorrect key size");
+		if (nonce == null)
+			throw new IllegalArgumentException("Null nonce");
+		if (nonce.length != NONCE_SIZE_WORDS)
+			throw new IllegalArgumentException("Incorrect nonce size");
 
 		// Initialise input block
 		initBlock(key, nonce);
@@ -636,13 +733,15 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Generates a block of data with a specified counter value and stores the resulting data as a sequence
-	 * of bytes in a specified buffer.
+	 * Generates a block of data with the specified counter value and stores the resulting data as a sequence of bytes
+	 * in the specified buffer.
 	 *
-	 * @param blockCounter  the value of the block counter that will be used for generating the block.
-	 * @param buffer        the buffer in which the generated data will be stored.
-	 * @param offset        the offset in {@code buffer} at which the first byte of the generated data will
-	 *                      be stored.
+	 * @param blockCounter
+	 *          the value of the block counter that will be used for generating the block.
+	 * @param buffer
+	 *          the buffer in which the generated data will be stored.
+	 * @param offset
+	 *          the offset in {@code buffer} at which the first byte of the generated data will be stored.
 	 * @see   #getNextBlock(byte[], int)
 	 */
 
@@ -651,8 +750,8 @@ public class Salsa20
 						 int    offset)
 	{
 		// Set block counter in input block
-		inBlock[BLOCK_COUNTER_OFFSET] = (int)blockCounter;
-		inBlock[BLOCK_COUNTER_OFFSET + 1] = (int)(blockCounter >>> 32);
+		inBlock[COUNTER_OFFSET] = (int)blockCounter;
+		inBlock[COUNTER_OFFSET + 1] = (int)(blockCounter >>> 32);
 
 		// Perform hash
 		hash(inBlock, outBlock, numRounds);
@@ -668,15 +767,16 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Generates a block of data with the current block counter value of this cipher and stores the
-	 * resulting data as a sequence of bytes in a specified buffer.
+	 * Generates a block of data with the current block counter of this cipher and stores the resulting data as a
+	 * sequence of bytes in the specified buffer.
 	 * <p>
 	 * The block counter is incremented after the block is generated.
 	 * </p>
 	 *
-	 * @param buffer  the buffer in which the generated data will be stored.
-	 * @param offset  the offset in {@code buffer} at which the first byte of the generated data will be
-	 *                stored.
+	 * @param buffer
+	 *          the buffer in which the generated data will be stored.
+	 * @param offset
+	 *          the offset in {@code buffer} at which the first byte of the generated data will be stored.
 	 * @see   #getBlock(long, byte[], int)
 	 * @see   #getBlockCounter()
 	 */
@@ -690,10 +790,12 @@ public class Salsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Initialises the input block with a specified key and nonce.
+	 * Initialises the input block with the specified key and nonce.
 	 *
-	 * @param key    the key.
-	 * @param nonce  the nonce.
+	 * @param key
+	 *          the key.
+	 * @param nonce
+	 *          the nonce.
 	 */
 
 	private void initBlock(int[] key,
@@ -707,14 +809,14 @@ public class Salsa20
 		int j = 0;
 
 		// Constant word 1
-		inBlock[i++] = CONSTANT_WORDS_32[j++];
+		inBlock[i++] = CONSTANT_WORDS[j++];
 
 		// Key 1
 		for (int k = 0; k < KEY_SIZE_WORDS / 2; k++)
 			inBlock[i++] = key[k];
 
 		// Constant word 2
-		inBlock[i++] = CONSTANT_WORDS_32[j++];
+		inBlock[i++] = CONSTANT_WORDS[j++];
 
 		// Nonce
 		for (int k = 0; k < NONCE_SIZE_WORDS; k++)
@@ -725,14 +827,14 @@ public class Salsa20
 			inBlock[i++] = 0;
 
 		// Constant word 3
-		inBlock[i++] = CONSTANT_WORDS_32[j++];
+		inBlock[i++] = CONSTANT_WORDS[j++];
 
 		// Key 2
 		for (int k = KEY_SIZE_WORDS / 2; k < KEY_SIZE_WORDS; k++)
 			inBlock[i++] = key[k];
 
 		// Constant word 4
-		inBlock[i++] = CONSTANT_WORDS_32[j++];
+		inBlock[i++] = CONSTANT_WORDS[j++];
 	}
 
 	//------------------------------------------------------------------
@@ -745,31 +847,29 @@ public class Salsa20
 
 	private int[] getId()
 	{
+		// Allocate array for ID
 		int[] id = new int[KEY_SIZE_WORDS + NONCE_SIZE_WORDS];
+
+		// Initialise index
 		int j = 0;
 
+		// Get first half of key
 		for (int i = KEY1_OFFSET; i < KEY1_OFFSET + KEY_SIZE_WORDS / 2; i++)
 			id[j++] = inBlock[i];
 
+		// Get second half of key
 		for (int i = KEY2_OFFSET; i < KEY2_OFFSET + KEY_SIZE_WORDS / 2; i++)
 			id[j++] = inBlock[i];
 
+		// Get nonce
 		for (int i = NONCE_OFFSET; i < NONCE_OFFSET + NONCE_SIZE_WORDS; i++)
 			id[j++] = inBlock[i];
 
+		// Return ID
 		return id;
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	int		numRounds;
-	private	long	blockCounter;
-	private	int[]	inBlock;
-	private	int[]	outBlock;
 
 }
 

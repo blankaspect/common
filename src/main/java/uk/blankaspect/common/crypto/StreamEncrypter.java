@@ -39,12 +39,14 @@ import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.ValueOutOfBoundsException;
 
-import uk.blankaspect.common.gui.IProgressView;
-import uk.blankaspect.common.gui.RunnableMessageDialog;
-
 import uk.blankaspect.common.misc.IProgressListener;
-import uk.blankaspect.common.misc.NumberUtils;
 import uk.blankaspect.common.misc.Task;
+
+import uk.blankaspect.common.number.NumberUtils;
+
+import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
+
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -53,50 +55,83 @@ import uk.blankaspect.common.misc.Task;
 
 
 /**
- * This class provides methods for encrypting and decrypting data with a stream cipher that is based on
- * the {@link Fortuna} cryptographically secure pseudo-random number generator (PRNG).
+ * This class provides methods for encrypting and decrypting data with a stream cipher that is based on the {@link
+ * Fortuna} cryptographically secure pseudo-random number generator (PRNG).
  * <p>
- * The kind of cipher that the PRNG uses to generate random numbers is specified when an instance of this
- * class is constructed.
+ * The kind of cipher that the PRNG uses to generate random numbers is specified when an instance of this class is
+ * constructed.
  * </p>
  * <p>
- * The content-encryption key (CEK) for the stream cipher that is used for encryption and decryption may be
- * either provided directly or derived from a key and a salt with the {@link Scrypt} password-based key
- * derivation function (KDF).  If the CEK is derived with a KDF, the salt and the parameters of the KDF are
- * written as cleartext (ie, unencrypted) to the encrypted output stream.
+ * The content-encryption key (CEK) for the stream cipher that is used for encryption and decryption may be either
+ * provided directly or derived from a key and a salt with the {@link Scrypt} password-based key derivation function
+ * (KDF).  If the CEK is derived with a KDF, the salt and the parameters of the KDF are written as cleartext (ie,
+ * unencrypted) to the encrypted output stream.
  * </p>
  * <p>
- * The encrypted stream may have a header comprising an identifier, version number and optional
- * supplementary data.
+ * The encrypted stream may have a header comprising an identifier, version number and optional supplementary data.
  * </p>
  * <p>
- * The payload is compressed with the Deflate algorithm before encryption.
+ * The payload is compressed with the DEFLATE algorithm before encryption.
  * </p>
  * <p>
- * In the encrypted stream, the ciphertext is followed by an HMAC-SHA256 hash value generated from the
- * timestamp and payload before encryption.  (HMAC-SHA256 is a hash-based message authentication code whose
- * underlying function is the SHA-256 cryptographic hash function.)  The hash value is used in the
- * decryption operation to verify the content-encryption key and the integrity of the ciphertext.
+ * In the encrypted stream, the ciphertext is followed by an HMAC-SHA256 hash value generated from the timestamp and
+ * payload before encryption.  (HMAC-SHA256 is a hash-based message authentication code whose underlying function is the
+ * SHA-256 cryptographic hash function.)  The hash value is used in the decryption operation to verify the
+ * content-encryption key and the integrity of the ciphertext.
  * </p>
- * <p>
- * The output from the encryption operation consists of the blocks listed below, in the order given.  The
- * leading characters have the following meanings: '?' indicates that the block is optional, '#' indicates
- * that the block is encrypted with the CEK, and '~' indicates that the content of the block is random
- * bytes.
+ * <p style="margin-bottom: 0.25em;">
+ * The output from the encryption operation consists of the blocks listed below, in the order given.  The leading
+ * characters have the following meanings: '?' indicates that the block is optional, '#' indicates that the block is
+ * encrypted with the CEK, and '~' indicates that the content of the block is random bytes.
  * </p>
- * <p>
- * <code>? </code>Header<br>
- * <code>? </code>Salt (for deriving CEK)<br>
- * <code>? </code>KDF parameters (for deriving CEK)<br>
- * <code>&nbsp; </code>Cipher ID<br>
- * <code># </code>Lengths of three blocks of random padding<br>
- * <code>~ </code>Padding 1<br>
- * <code># </code>Timestamp<br>
- * <code># </code>Payload<br>
- * <code>~ </code>Padding 2<br>
- * <code># </code>HMAC-SHA256 hash value of timestamp and payload<br>
- * <code>~ </code>Padding 3<br>
- * </p>
+ * <table style="margin-top: 0.25em; padding-left: 1em;">
+ *   <tbody>
+ *     <tr>
+ *       <td>? </td>
+ *       <td style="padding-left: 0.7em;">Header</td>
+ *     </tr>
+ *     <tr>
+ *       <td>? </td>
+ *       <td style="padding-left: 0.7em;">Salt (for deriving CEK)</td>
+ *     </tr>
+ *     <tr>
+ *       <td>? </td>
+ *       <td style="padding-left: 0.7em;">KDF parameters (for deriving CEK)</td>
+ *     </tr>
+ *     <tr>
+ *       <td>&nbsp; </td>
+ *       <td style="padding-left: 0.7em;">Cipher ID</td>
+ *     </tr>
+ *     <tr>
+ *       <td># </td>
+ *       <td style="padding-left: 0.7em;">Lengths of three blocks of random padding</td>
+ *     </tr>
+ *     <tr>
+ *       <td>~ </td>
+ *       <td style="padding-left: 0.7em;">Padding 1</td>
+ *     </tr>
+ *     <tr>
+ *       <td># </td>
+ *       <td style="padding-left: 0.7em;">Timestamp</td>
+ *     </tr>
+ *     <tr>
+ *       <td># </td>
+ *       <td style="padding-left: 0.7em;">Payload</td>
+ *     </tr>
+ *     <tr>
+ *       <td>~ </td>
+ *       <td style="padding-left: 0.7em;">Padding 2</td>
+ *     </tr>
+ *     <tr>
+ *       <td># </td>
+ *       <td style="padding-left: 0.7em;">HMAC-SHA256 hash value of timestamp and payload</td>
+ *     </tr>
+ *     <tr>
+ *       <td>~ </td>
+ *       <td style="padding-left: 0.7em;">Padding 3</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
  */
 
 public class StreamEncrypter
@@ -106,27 +141,19 @@ public class StreamEncrypter
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The size (in bytes) of the salt that is used to derive a content-encryption key.
-	 */
+	/** The size (in bytes) of the salt that is used to derive a content-encryption key. */
 	public static final		int	SALT_SIZE			= 32;
 
-	/**
-	 * The size (in bytes) of the content-encryption key that is derived from a key and a salt with the
-	 * {@linkplain uk.blankaspect.common.crypto.Scrypt scrypt} key derivation function.
-	 */
+	/** The size (in bytes) of the content-encryption key that is derived from a key and a salt with the {@linkplain
+		Scrypt scrypt} key derivation function. */
 	public static final		int	DERIVED_KEY_SIZE	= 256;
 
-	/**
-	 * The minimum compression level for the compression with the Deflate algorithm that is applied to the
-	 * payload of an encryption operation.
-	 */
+	/** The minimum compression level for the compression with the DEFLATE algorithm that is applied to the payload of
+		an encryption operation. */
 	public static final		int	MIN_COMPRESSION_LEVEL	= Deflater.BEST_SPEED;
 
-	/**
-	 * The maximum compression level for the compression with the Deflate algorithm that is applied to the
-	 * payload of an encryption operation.
-	 */
+	/** The maximum compression level for the compression with the DEFLATE algorithm that is applied to the payload of
+		an encryption operation. */
 	public static final		int	MAX_COMPRESSION_LEVEL	= Deflater.BEST_COMPRESSION;
 
 	private static final	int	NUM_PADDINGS	= 3;
@@ -213,7 +240,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -246,7 +273,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Reads data from the input up to a specified length and stores it in a buffer.
+		 * Reads data from the input up to the specified length and stores it in a buffer.
 		 *
 		 * @param  buffer  the buffer in which the data will be stored.
 		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
@@ -353,7 +380,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier and version number.
+		 * Creates a header of an encrypted stream with the specified identifier and version number.
 		 *
 		 * @param id       the identifier of the payload of the encrypted stream.
 		 * @param version  the version number of the payload of the encrypted stream.
@@ -368,8 +395,8 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier and version number, and with
-		 * empty supplementary data of a specified length.
+		 * Creates a header of an encrypted stream with the specified identifier and version number, and with
+		 * empty supplementary data of the specified length.
 		 *
 		 * @param id                       the identifier of the payload of the encrypted stream.
 		 * @param version                  the version number of the payload of the encrypted stream.
@@ -387,7 +414,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier, version number and
+		 * Creates a header of an encrypted stream with the specified identifier, version number and
 		 * supplementary data.
 		 *
 		 * @param id                 the identifier of the payload of the encrypted stream.
@@ -405,7 +432,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier and version number, and with
+		 * Creates a header of an encrypted stream with the specified identifier and version number, and with
 		 * a minimum and maximum supported version number.
 		 * <p>
 		 * The version number of the payload is tested against the minimum and maximum supported version
@@ -429,8 +456,8 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier and version number, empty
-		 * supplementary data of a specified length, and a minimum and maximum supported version number.
+		 * Creates a header of an encrypted stream with the specified identifier and version number, empty
+		 * supplementary data of the specified length, and a minimum and maximum supported version number.
 		 * <p>
 		 * The version number of the payload is tested against the minimum and maximum supported version
 		 * number when a stream is decrypted.
@@ -457,8 +484,8 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a header of an encrypted stream with a specified identifier and version number, empty
-		 * supplementary data of a specified length, and a minimum and maximum supported version number.
+		 * Creates a header of an encrypted stream with the specified identifier and version number, empty
+		 * supplementary data of the specified length, and a minimum and maximum supported version number.
 		 * <p>
 		 * The version number of the payload is tested against the minimum and maximum supported version
 		 * number when a stream is decrypted.
@@ -622,7 +649,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int		id;
@@ -646,23 +673,21 @@ public class StreamEncrypter
 	 * <ul>
 	 *   <li>CPU/memory cost,</li>
 	 *   <li>number of blocks, and</li>
-	 *   <li>number of parallel superblocks ("parallelization parameter").</li>
+	 *   <li>number of parallel superblocks ('parallelisation parameter').</li>
 	 * </ul>
 	 * This class extends the {@link Scrypt.Params} class by adding two parameters that are not part of the scrypt
 	 * specification:
 	 * <ul>
 	 *   <li>
-	 *     The <i>number of rounds</i> parameter allows the number of rounds of the Salsa20 core to be
-	 *     selected from the set { 8, 12, 16, 20 } instead of being fixed at 8 in accordance with the scrypt
-	 *     specification.
+	 *     The <i>number of rounds</i> parameter allows the number of rounds of the Salsa20 core to be selected from the
+	 *     set { 8, 12, 16, 20 } instead of being fixed at 8 in accordance with the scrypt specification.
 	 *   </li>
 	 *   <li>
-	 *     The <i>maximum number of threads</i> parameter denotes the maximum number of threads that will be
-	 *     created to process the parallel superblocks at the highest level of the scrypt algorithm.  If the
-	 *     value of the parameter is zero, the maximum number of threads will be the number of available
-	 *     processors on the system.  The number of threads allocated by the KDF will not exceed the number
-	 *     of parallel blocks nor the number of available processors.  The number of threads affects the
-	 *     performance of the KDF but not its result.
+	 *     The <i>maximum number of threads</i> parameter denotes the maximum number of threads that will be created to
+	 *     process the parallel superblocks at the highest level of the scrypt algorithm.  If the value of the parameter
+	 *     is zero, the maximum number of threads will be the number of available processors on the system.  The number
+	 *     of threads allocated by the KDF will not exceed the number of parallel blocks nor the number of available
+	 *     processors.  The number of threads affects the performance of the KDF but not its result.
 	 *   </li>
 	 * </ul>
 	 * <p>
@@ -687,76 +712,55 @@ public class StreamEncrypter
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		/**
-		 * The minimum value of the CPU/memory cost parameter, which is the binary logarithm of the <i>N</i>
-		 * parameter (CPU/memory cost) of the scrypt algorithm.
-		 */
+		/** The minimum value of the CPU/memory cost parameter, which is the binary logarithm of the <i>N</i> parameter
+			(CPU/memory cost) of the scrypt algorithm. */
 		public static final		int	MIN_COST	= Scrypt.MIN_COST;
 
-		/**
-		 * The maximum value of the CPU/memory cost parameter, which is the binary logarithm of the <i>N</i>
-		 * parameter (CPU/memory cost) of the scrypt algorithm.
-		 */
+		/** The maximum value of the CPU/memory cost parameter, which is the binary logarithm of the <i>N</i> parameter
+			(CPU/memory cost) of the scrypt algorithm. */
 		public static final		int	MAX_COST	= Scrypt.MAX_COST;
 
-		/**
-		 * The minimum value of the <i>r</i> parameter (block size) of the scrypt algorithm.
-		 */
+		/** The minimum value of the <i>r</i> parameter (block size) of the scrypt algorithm. */
 		public static final		int	MIN_NUM_BLOCKS	= Scrypt.MIN_NUM_BLOCKS;
 
-		/**
-		 * The maximum value of the <i>r</i> parameter (block size) of the scrypt algorithm.
-		 */
+		/** The maximum value of the <i>r</i> parameter (block size) of the scrypt algorithm. */
 		public static final		int	MAX_NUM_BLOCKS	= 256;
 
-		/**
-		 * The minimum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm.
-		 */
-		public static final		int	MIN_NUM_PARALLEL_BLOCKS	= Scrypt.MIN_NUM_PARALLEL_BLOCKS;
+		/** The minimum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm. */
+		public static final		int	MIN_NUM_SUPERBLOCKS	= Scrypt.MIN_NUM_SUPERBLOCKS;
 
-		/**
-		 * The maximum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm.
-		 */
-		public static final		int	MAX_NUM_PARALLEL_BLOCKS	= Scrypt.MAX_NUM_PARALLEL_BLOCKS;
+		/** The maximum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm. */
+		public static final		int	MAX_NUM_SUPERBLOCKS	= Scrypt.MAX_NUM_SUPERBLOCKS;
 
-		/**
-		 * The minimum value of the <i>maximum number of threads</i> parameter.  The value of zero denotes
-		 * the number of available processors on the system.
-		 */
+		/** The minimum value of the <i>maximum number of threads</i> parameter.  The value of zero denotes the number
+			of available processors on the system. */
 		public static final		int	MIN_MAX_NUM_THREADS	= 0;
 
-		/**
-		 * The maximum value of the <i>maximum number of threads</i> parameter.
-		 */
+		/** The maximum value of the <i>maximum number of threads</i> parameter. */
 		public static final		int	MAX_MAX_NUM_THREADS	= Scrypt.MAX_NUM_THREADS;
 
 		private static final	int	NUM_PARAMETERS	= 5;
 
 		private static final	int	FUNCTION_ID	= 0;
 
-		private static final	int	FUNCTION_ID_FIELD_OFFSET			= 0;
-		private static final	int	FUNCTION_ID_FIELD_LENGTH			= 4;
+		private static final	int	FUNCTION_ID_FIELD_OFFSET		= 0;
+		private static final	int	FUNCTION_ID_FIELD_LENGTH		= 4;
 
-		private static final	int	NUM_ROUNDS_FIELD_OFFSET				= FUNCTION_ID_FIELD_OFFSET +
-																				FUNCTION_ID_FIELD_LENGTH;
-		private static final	int	NUM_ROUNDS_FIELD_LENGTH				= 2;
+		private static final	int	NUM_ROUNDS_FIELD_OFFSET			= FUNCTION_ID_FIELD_OFFSET + FUNCTION_ID_FIELD_LENGTH;
+		private static final	int	NUM_ROUNDS_FIELD_LENGTH			= 2;
 
-		private static final	int	COST_FIELD_OFFSET					= NUM_ROUNDS_FIELD_OFFSET +
-																					NUM_ROUNDS_FIELD_LENGTH;
-		private static final	int	COST_FIELD_LENGTH					= 5;
+		private static final	int	COST_FIELD_OFFSET				= NUM_ROUNDS_FIELD_OFFSET + NUM_ROUNDS_FIELD_LENGTH;
+		private static final	int	COST_FIELD_LENGTH				= 5;
 
-		private static final	int	NUM_BLOCKS_FIELD_OFFSET				= COST_FIELD_OFFSET +
-																						COST_FIELD_LENGTH;
-		private static final	int	NUM_BLOCKS_FIELD_LENGTH				= 8;
+		private static final	int	NUM_BLOCKS_FIELD_OFFSET			= COST_FIELD_OFFSET + COST_FIELD_LENGTH;
+		private static final	int	NUM_BLOCKS_FIELD_LENGTH			= 8;
 
-		private static final	int	NUM_PARALLEL_BLOCKS_FIELD_OFFSET	= NUM_BLOCKS_FIELD_OFFSET +
-																					NUM_BLOCKS_FIELD_LENGTH;
-		private static final	int	NUM_PARALLEL_BLOCKS_FIELD_LENGTH	= 6;
+		private static final	int	NUM_SUPERBLOCKS_FIELD_OFFSET	= NUM_BLOCKS_FIELD_OFFSET + NUM_BLOCKS_FIELD_LENGTH;
+		private static final	int	NUM_SUPERBLOCKS_FIELD_LENGTH	= 6;
 
-		private static final	int	MAX_NUM_THREADS_FIELD_OFFSET		=
-																		NUM_PARALLEL_BLOCKS_FIELD_OFFSET +
-																		NUM_PARALLEL_BLOCKS_FIELD_LENGTH;
-		private static final	int	MAX_NUM_THREADS_FIELD_LENGTH		= 7;
+		private static final	int	MAX_NUM_THREADS_FIELD_OFFSET	= NUM_SUPERBLOCKS_FIELD_OFFSET
+																		+ NUM_SUPERBLOCKS_FIELD_LENGTH;
+		private static final	int	MAX_NUM_THREADS_FIELD_LENGTH	= 7;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -787,12 +791,10 @@ public class StreamEncrypter
 		public KdfParams(int encodedValue)
 		{
 			super(getFieldValue(encodedValue, MIN_COST, COST_FIELD_OFFSET, COST_FIELD_LENGTH),
-				  getFieldValue(encodedValue, MIN_NUM_BLOCKS, NUM_BLOCKS_FIELD_OFFSET,
-								NUM_BLOCKS_FIELD_LENGTH),
-				  getFieldValue(encodedValue, MIN_NUM_PARALLEL_BLOCKS, NUM_PARALLEL_BLOCKS_FIELD_OFFSET,
-								NUM_PARALLEL_BLOCKS_FIELD_LENGTH));
+				  getFieldValue(encodedValue, MIN_NUM_BLOCKS, NUM_BLOCKS_FIELD_OFFSET, NUM_BLOCKS_FIELD_LENGTH),
+				  getFieldValue(encodedValue, MIN_NUM_SUPERBLOCKS, NUM_SUPERBLOCKS_FIELD_OFFSET, NUM_SUPERBLOCKS_FIELD_LENGTH));
 			int index = getFieldValue(encodedValue, 0, NUM_ROUNDS_FIELD_OFFSET, NUM_ROUNDS_FIELD_LENGTH);
-			numRounds = Scrypt.Salsa20NumRounds.values()[index];
+			numRounds = Scrypt.CoreHashNumRounds.values()[index];
 			maxNumThreads = getFieldValue(encodedValue, MIN_MAX_NUM_THREADS, MAX_NUM_THREADS_FIELD_OFFSET,
 										  MAX_NUM_THREADS_FIELD_LENGTH);
 		}
@@ -800,22 +802,27 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a set of KDF parameters with a specified value for each of the five parameters.
+		 * Creates a set of KDF parameters with the specified value for each of the five parameters.
 		 *
-		 * @param numRounds          the number of rounds of the Salsa20 core.
-		 * @param cost               the CPU/memory cost (scrypt parameter <i>N</i>).
-		 * @param numBlocks          the number of blocks (scrypt parameter <i>r</i>).
-		 * @param numParallelBlocks  the number of parallel superblocks (scrypt parameter <i>p</i>).
-		 * @param maxNumThreads      the maximum number of threads.
+		 * @param numRounds
+		 *          the number of rounds of the Salsa20 core.
+		 * @param cost
+		 *          the CPU/memory cost (scrypt parameter <i>N</i>).
+		 * @param numBlocks
+		 *          the number of blocks (scrypt parameter <i>r</i>).
+		 * @param numSuperblocks
+		 *          the number of parallel superblocks (scrypt parameter <i>p</i>).
+		 * @param maxNumThreads
+		 *          the maximum number of threads.
 		 */
 
-		public KdfParams(Scrypt.Salsa20NumRounds numRounds,
-						 int                     cost,
-						 int                     numBlocks,
-						 int                     numParallelBlocks,
-						 int                     maxNumThreads)
+		public KdfParams(Scrypt.CoreHashNumRounds numRounds,
+						 int                      cost,
+						 int                      numBlocks,
+						 int                      numSuperblocks,
+						 int                      maxNumThreads)
 		{
-			super(cost, numBlocks, numParallelBlocks);
+			super(cost, numBlocks, numSuperblocks);
 			this.numRounds = numRounds;
 			this.maxNumThreads = maxNumThreads;
 		}
@@ -852,8 +859,7 @@ public class StreamEncrypter
 
 			// Number of rounds
 			int index = 0;
-			Scrypt.Salsa20NumRounds numRounds =
-								Scrypt.Salsa20NumRounds.forNumRounds(Integer.parseInt(strs[index++]));
+			Scrypt.CoreHashNumRounds numRounds = Scrypt.CoreHashNumRounds.forNumRounds(Integer.parseInt(strs[index++]));
 			if (numRounds == null)
 				throw new IllegalArgumentException();
 
@@ -868,9 +874,8 @@ public class StreamEncrypter
 				throw new ValueOutOfBoundsException();
 
 			// Number of parallel superblocks
-			int numParallelBlocks = Integer.parseInt(strs[index++]);
-			if ((numParallelBlocks < MIN_NUM_PARALLEL_BLOCKS) ||
-				 (numParallelBlocks > MAX_NUM_PARALLEL_BLOCKS))
+			int numSuperblocks = Integer.parseInt(strs[index++]);
+			if ((numSuperblocks < MIN_NUM_SUPERBLOCKS) || (numSuperblocks > MAX_NUM_SUPERBLOCKS))
 				throw new ValueOutOfBoundsException();
 
 			// Maximum number of threads
@@ -878,7 +883,7 @@ public class StreamEncrypter
 			if ((maxNumThreads < MIN_MAX_NUM_THREADS) || (maxNumThreads > MAX_MAX_NUM_THREADS))
 				throw new ValueOutOfBoundsException();
 
-			return new KdfParams(numRounds, cost, numBlocks, numParallelBlocks, maxNumThreads);
+			return new KdfParams(numRounds, cost, numBlocks, numSuperblocks, maxNumThreads);
 		}
 
 		//--------------------------------------------------------------
@@ -912,11 +917,10 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Returns a string representation of this object that can be parsed by {@link
-		 * #parseParams(String)}.
+		 * Returns a string representation of this object that can be parsed by {@link #parseParams(String)}.
 		 * <p>
-		 * The string consists of a decimal-number representation of each of the five parameters.
-		 * Successive parameters are separated with a comma and optional spaces.
+		 * The string consists of a decimal-number representation of each of the five parameters.  Successive parameters
+		 * are separated with a comma and optional spaces.
 		 * </p>
 		 *
 		 * @return a string representation of this object.
@@ -929,11 +933,11 @@ public class StreamEncrypter
 			StringBuilder buffer = new StringBuilder(32);
 			buffer.append(numRounds.getValue());
 			buffer.append(", ");
-			buffer.append(cost);
+			buffer.append(getCost());
 			buffer.append(", ");
-			buffer.append(numBlocks);
+			buffer.append(getNumBlocks());
 			buffer.append(", ");
-			buffer.append(numParallelBlocks);
+			buffer.append(getNumSuperblocks());
 			buffer.append(", ");
 			buffer.append(maxNumThreads);
 			return buffer.toString();
@@ -999,18 +1003,39 @@ public class StreamEncrypter
 		/**
 		 * Returns this set of KDF parameters encoded as bit fields in a 32-bit integer.  The <i>maximum
 		 * number of threads</i> parameter may be optionally included in the encoded value.
-		 * <p>
-		 * The bit fields are as follows:
+		 * <p style="margin-bottom: 0.25em;">
+		 * The bit fields are:
 		 * </p>
-		 * <p>
-		 * bits <code>&nbsp;3:0&nbsp;</code> : function ID (scrypt = 0)<br>
-		 * bits <code>&nbsp;5:4&nbsp;</code> : number of rounds of the Salsa20 core<br>
-		 * bits <code>10:6&nbsp;</code> : CPU/memory cost<br>
-		 * bits <code>18:11</code> : number of blocks<br>
-		 * bits <code>24:19</code> : number of parallel superblocks<br>
-		 * and, optionally,<br>
-		 * bits <code>31:25</code> : maximum number of threads<br>
-		 * </p>
+		 * <table style="margin-top: 0.25em; padding-left: 1em;">
+		 *   <tbody>
+		 *     <tr>
+		 *       <td>bits 3:0</td>
+		 *       <td style="padding-left: 0.7em;">function ID (scrypt = 0)</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td>bits 5:4</td>
+		 *       <td style="padding-left: 0.7em;">number of rounds of the Salsa20 core</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td>bits 10:6</td>
+		 *       <td style="padding-left: 0.7em;">CPU/memory cost</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td>bits 18:11</td>
+		 *       <td style="padding-left: 0.7em;">number of blocks</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td>bits 24:19</td>
+		 *       <td style="padding-left: 0.7em;">number of parallel superblocks</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td colspan="2" style="padding-top: 0.25em;">and, optionally,</td>
+		 *     </tr>
+		 *     <tr>
+		 *       <td>bits 31:25</td>
+		 *       <td style="padding-left: 0.7em;">maximum number of threads</td>
+		 *     </tr>
+		 * </table>
 		 * <p>
 		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the
 		 * vector of supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an
@@ -1029,11 +1054,11 @@ public class StreamEncrypter
 			int data = 0;
 			data = BitUtils.setBitField(data, FUNCTION_ID, FUNCTION_ID_FIELD_OFFSET, FUNCTION_ID_FIELD_LENGTH);
 			data = BitUtils.setBitField(data, numRounds.ordinal(), NUM_ROUNDS_FIELD_OFFSET, NUM_ROUNDS_FIELD_LENGTH);
-			data = BitUtils.setBitField(data, cost - MIN_COST, COST_FIELD_OFFSET, COST_FIELD_LENGTH);
-			data = BitUtils.setBitField(data, numBlocks - MIN_NUM_BLOCKS, NUM_BLOCKS_FIELD_OFFSET,
+			data = BitUtils.setBitField(data, getCost() - MIN_COST, COST_FIELD_OFFSET, COST_FIELD_LENGTH);
+			data = BitUtils.setBitField(data, getNumBlocks() - MIN_NUM_BLOCKS, NUM_BLOCKS_FIELD_OFFSET,
 										NUM_BLOCKS_FIELD_LENGTH);
-			data = BitUtils.setBitField(data, numParallelBlocks - MIN_NUM_PARALLEL_BLOCKS,
-										NUM_PARALLEL_BLOCKS_FIELD_OFFSET, NUM_PARALLEL_BLOCKS_FIELD_LENGTH);
+			data = BitUtils.setBitField(data, getNumSuperblocks() - MIN_NUM_SUPERBLOCKS, NUM_SUPERBLOCKS_FIELD_OFFSET,
+										NUM_SUPERBLOCKS_FIELD_LENGTH);
 			if (includeNumThreads)
 				data = BitUtils.setBitField(data, maxNumThreads - MIN_MAX_NUM_THREADS, MAX_NUM_THREADS_FIELD_OFFSET,
 											MAX_NUM_THREADS_FIELD_LENGTH);
@@ -1043,18 +1068,14 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
-		/**
-		 * The number of rounds of the Salsa20 core.
-		 */
-		public	Scrypt.Salsa20NumRounds	numRounds;
+		/** The number of rounds of the core hash function. */
+		public	Scrypt.CoreHashNumRounds	numRounds;
 
-		/**
-		 * The maximum number of threads that will be allocated by the parallel phase of the scrypt KDF.
-		 */
-		public	int						maxNumThreads;
+		/** The maximum number of threads that will be allocated by the parallel phase of the scrypt KDF. */
+		public	int							maxNumThreads;
 
 	}
 
@@ -1201,7 +1222,7 @@ public class StreamEncrypter
 
 		public void setDataDescription(String description)
 		{
-			setSubstitutionString(0, description);
+			setReplacement(0, description);
 		}
 
 		//--------------------------------------------------------------
@@ -1231,7 +1252,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates an adapter to wrap a specified input stream.
+		 * Creates an adapter to wrap the specified input stream.
 		 *
 		 * @param inStream  the input stream that will be adapted by this implementation of {@link IInput}.
 		 */
@@ -1248,7 +1269,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Reads data from the input stream up to a specified length, and stores it in a buffer.
+		 * Reads data from the input stream up to the specified length, and stores it in a buffer.
 		 *
 		 * @param  buffer  the buffer in which the data will be stored.
 		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
@@ -1258,6 +1279,7 @@ public class StreamEncrypter
 		 *           if an error occurs when reading from the input stream.
 		 */
 
+		@Override
 		public int read(byte[] buffer,
 						int    offset,
 						int    length)
@@ -1269,7 +1291,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	InputStream	inputStream;
@@ -1299,7 +1321,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates an adapter to wrap a specified output stream.
+		 * Creates an adapter to wrap the specified output stream.
 		 *
 		 * @param outStream  the output stream that will be adapted by this implementation of {@link IOutput}.
 		 */
@@ -1325,6 +1347,7 @@ public class StreamEncrypter
 		 *           if an error occurs when writing to the output stream.
 		 */
 
+		@Override
 		public void write(byte[] data,
 						  int    offset,
 						  int    length)
@@ -1336,7 +1359,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	OutputStream	outputStream;
@@ -1350,7 +1373,6 @@ public class StreamEncrypter
 
 
 	private static class KeyGenerator
-		extends Scrypt.KeyGenerator
 	{
 
 	////////////////////////////////////////////////////////////////////
@@ -1360,6 +1382,12 @@ public class StreamEncrypter
 		private static final	String	MESSAGE_STR	= "Generating the content-encryption key ...";
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Scrypt.KeyGenerator	generator;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -1367,8 +1395,8 @@ public class StreamEncrypter
 							 byte[]    salt,
 							 KdfParams kdfParams)
 		{
-			super(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE, MESSAGE_STR);
-			Scrypt.setSalsa20CoreNumRounds(kdfParams.numRounds);
+			generator = new ScryptSalsa20(kdfParams.numRounds)
+								.createKeyGenerator(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE);
 		}
 
 		//--------------------------------------------------------------
@@ -1395,12 +1423,12 @@ public class StreamEncrypter
 			throws AppException
 		{
 			if (window == null)
-				run();
+				generator.run();
 			else
-				RunnableMessageDialog.showDialog(window, this);
-			if (isOutOfMemory())
+				RunnableMessageDialog.showDialog(window, MESSAGE_STR, generator);
+			if (generator.isOutOfMemory())
 				throw new AppException(ErrorId.NOT_ENOUGH_MEMORY);
-			return getDerivedKey();
+			return generator.getDerivedKey();
 		}
 
 		//--------------------------------------------------------------
@@ -1521,7 +1549,7 @@ public class StreamEncrypter
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Reads data from a specified input, and stores it in a buffer.
+	 * Reads data from the specified input, and stores it in a buffer.
 	 *
 	 * @param  input   the input object from which data will be read.
 	 * @param  buffer  the buffer in which the data will be stored.
@@ -1539,7 +1567,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Reads data from a specified input up to a specifed length, and stores it in a buffer.
+	 * Reads data from the specified input up to a specifed length, and stores it in a buffer.
 	 *
 	 * @param  input   the input object from which data will be read.
 	 * @param  buffer  the buffer in which the data will be stored.
@@ -1575,7 +1603,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Writes data from an array of bytes to a specified output.
+	 * Writes data from an array of bytes to the specified output.
 	 *
 	 * @param  output  the output object to whicg the data will be written.
 	 * @param  data    the array of data to be written.
@@ -1593,7 +1621,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Writes data from an array of bytes to a specified output.
+	 * Writes data from an array of bytes to the specified output.
 	 *
 	 * @param  output  the output object to whicg the data will be written.
 	 * @param  data    the array of data to be written.
@@ -1668,13 +1696,13 @@ public class StreamEncrypter
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Returns the compression level of the Deflate algorithm that is applied to the payload before
+	 * Returns the compression level of the DEFLATE algorithm that is applied to the payload before
 	 * encryption.
 	 * <p>
 	 * The compression level can have values from 1 to 9.
 	 * </p>
 	 *
-	 * @return the compression level of the Deflate algorithm that is applied to the payload before
+	 * @return the compression level of the DEFLATE algorithm that is applied to the payload before
 	 *         encryption.
 	 * @see    #setCompressionLevel(int)
 	 */
@@ -1754,7 +1782,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Sets the compression level of the Deflate algorithm that is applied to the payload before encryption.
+	 * Sets the compression level of the DEFLATE algorithm that is applied to the payload before encryption.
 	 * <p>
 	 * The compression level can have values from 1 to 9.
 	 * </p>
@@ -1775,7 +1803,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Adds a specified progress listener to this encrypter's list of listeners.
+	 * Adds the specified progress listener to this encrypter's list of listeners.
 	 * <p>
 	 * The progress listeners are notified during encryption and decryption operations after each block of
 	 * the payload is processed.
@@ -1794,7 +1822,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Removes a specified progress listener from this encrypter's list of listeners.
+	 * Removes the specified progress listener from this encrypter's list of listeners.
 	 * <p>
 	 * The removal operation has no effect if the specified listener is not in the list.
 	 * </p>
@@ -1827,7 +1855,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Encrypts data from a specified input stream and writes the resulting ciphertext to a specified output
+	 * Encrypts data from the specified input stream and writes the resulting ciphertext to the specified output
 	 * stream.
 	 * <p>
 	 * The output stream also contains metadata and blocks of padding of random lengths in addition to the
@@ -1874,7 +1902,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Encrypts data from a specified input and writes the resulting ciphertext to a specified output.
+	 * Encrypts data from the specified input and writes the resulting ciphertext to the specified output.
 	 * <p>
 	 * The output data also contains metadata and blocks of padding of random lengths in addition to the
 	 * ciphertext.  The composition of the output data is described in the class comment for {@link
@@ -2040,7 +2068,7 @@ public class StreamEncrypter
 		hash.update(timestampData);
 
 		// Compress and encrypt data from input stream
-		Deflater deflater = new Deflater(compressionLevel, true);
+		Deflater compressor = new Deflater(compressionLevel, true);
 		byte[] inBuffer = new byte[BUFFER_SIZE];
 		byte[] outBuffer = new byte[BUFFER_SIZE];
 		long offset = 0;
@@ -2059,10 +2087,10 @@ public class StreamEncrypter
 			hash.update(inBuffer, 0, blockLength);
 
 			// Compress and encrypt input data and write it to output stream
-			deflater.setInput(inBuffer, 0, blockLength);
+			compressor.setInput(inBuffer, 0, blockLength);
 			while (true)
 			{
-				int outLength = deflater.deflate(outBuffer);
+				int outLength = compressor.deflate(outBuffer);
 				if (outLength == 0)
 					break;
 				combiner.combine(outBuffer, 0, outLength);
@@ -2079,10 +2107,10 @@ public class StreamEncrypter
 		}
 
 		// Write remaining compressed data
-		deflater.finish();
+		compressor.finish();
 		while (true)
 		{
-			int outLength = deflater.deflate(outBuffer);
+			int outLength = compressor.deflate(outBuffer);
 			if (outLength == 0)
 				break;
 			combiner.combine(outBuffer, 0, outLength);
@@ -2107,7 +2135,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Decrypts data from a specified input stream and writes the resulting plaintext to a specified output
+	 * Decrypts data from the specified input stream and writes the resulting plaintext to the specified output
 	 * stream.
 	 * <p>
 	 * The expected composition of the input data is described in the class comment for {@link
@@ -2147,7 +2175,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Decrypts data from a specified input and writes the resulting plaintext to a specified output.
+	 * Decrypts data from the specified input and writes the resulting plaintext to the specified output.
 	 * <p>
 	 * The expected composition of the input data is described in the class comment for {@link
 	 * StreamEncrypter}.
@@ -2279,7 +2307,7 @@ public class StreamEncrypter
 		hash.update(timestampData);
 
 		// Read and decrypt payload
-		Inflater inflater = new Inflater(true);
+		Inflater decompressor = new Inflater(true);
 		byte[] inBuffer = new byte[BUFFER_SIZE];
 		byte[] outBuffer = new byte[BUFFER_SIZE];
 		length -= METADATA1_SIZE;
@@ -2303,13 +2331,13 @@ public class StreamEncrypter
 			combiner.combine(inBuffer, 0, blockLength);
 
 			// Decompress data and write it to output stream
-			inflater.setInput(inBuffer, 0, blockLength);
+			decompressor.setInput(inBuffer, 0, blockLength);
 			try
 			{
 				while (true)
 				{
-					int outLength = inflater.inflate(outBuffer);
-					if (outLength == 0)
+					int outLength = decompressor.inflate(outBuffer);
+					if ((outLength == 0) && decompressor.needsInput())
 						break;
 					hash.update(outBuffer, 0, outLength);
 					write(output, outBuffer, 0, outLength);
@@ -2342,7 +2370,7 @@ public class StreamEncrypter
 		if (!Arrays.equals(hashValueData, hash.getValue()))
 			throw new InputException(ErrorId.INCORRECT_KEY);
 
-		// Update instance fields
+		// Update instance variables
 		hashValue = hashValueData;
 
 		// Return timestamp
@@ -2352,7 +2380,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	FortunaCipher			cipher;

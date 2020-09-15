@@ -20,9 +20,6 @@ package uk.blankaspect.common.xml;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -100,7 +97,7 @@ public class Comment
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -231,8 +228,8 @@ public class Comment
 					  int       textIndent)
 		throws IOException
 	{
-		List<Attribute> attributes = new ArrayList<>();
-		attributes.add(new Attribute(AttrName.INDENT, textIndent));
+		AttributeList attributes = new AttributeList();
+		attributes.add(AttrName.INDENT, textIndent);
 		writer.writeElementStart(ElementName.COMMENT, attributes, elementIndent, true, true);
 
 		int index = 0;
@@ -257,7 +254,7 @@ public class Comment
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	text;

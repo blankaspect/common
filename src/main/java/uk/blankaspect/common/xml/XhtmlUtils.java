@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.misc.NumberUtils;
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -350,7 +350,7 @@ public class XhtmlUtils
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		int		key;

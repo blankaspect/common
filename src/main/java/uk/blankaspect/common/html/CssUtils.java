@@ -20,7 +20,7 @@ package uk.blankaspect.common.html;
 
 import java.util.List;
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 

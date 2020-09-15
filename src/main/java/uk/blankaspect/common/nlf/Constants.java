@@ -31,10 +31,6 @@ interface Constants
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	// Character encodings
-	String	ENCODING_NAME_ASCII	= "US-ASCII";
-	String	ENCODING_NAME_UTF8	= "UTF-8";
-
 	// Temporary-file prefix
 	String	TEMP_FILE_PREFIX	= "_$_";
 

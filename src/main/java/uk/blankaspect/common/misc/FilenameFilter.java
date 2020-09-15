@@ -88,6 +88,7 @@ public class FilenameFilter
 	//  Instance methods : FileFilter interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public boolean accept(File file)
 		{
 			for (FilenameFilter filter : filters)
@@ -119,7 +120,7 @@ public class FilenameFilter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	FilenameFilter[]	filters;
@@ -171,7 +172,7 @@ public class FilenameFilter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	Kind	kind;
@@ -184,12 +185,6 @@ public class FilenameFilter
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
-
-	public FilenameFilter()
-	{
-	}
-
-	//------------------------------------------------------------------
 
 	public FilenameFilter(String pattern)
 	{
@@ -236,10 +231,17 @@ public class FilenameFilter
 
 	//------------------------------------------------------------------
 
+	protected FilenameFilter()
+	{
+	}
+
+	//------------------------------------------------------------------
+
 ////////////////////////////////////////////////////////////////////////
 //  Instance methods : Comparable interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public int compareTo(FilenameFilter filter)
 	{
 		return toString().compareTo(filter.toString());
@@ -251,6 +253,7 @@ public class FilenameFilter
 //  Instance methods : FileFilter interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public boolean accept(File file)
 	{
 		// Don't accept an existing entity that is not a normal file
@@ -334,7 +337,7 @@ public class FilenameFilter
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String				pattern;

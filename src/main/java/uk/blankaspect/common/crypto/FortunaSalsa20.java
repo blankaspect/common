@@ -2,7 +2,7 @@
 
 FortunaSalsa20.java
 
-Fortuna/Salsa20 pseudo-random number generator class.
+Class: Fortuna/Salsa20 pseudo-random number generator.
 
 \*====================================================================*/
 
@@ -18,19 +18,18 @@ package uk.blankaspect.common.crypto;
 // IMPORTS
 
 
-import java.io.UnsupportedEncodingException;
-
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 //----------------------------------------------------------------------
 
 
-// FORTUNA/SALSA20 PSEUDO-RANDOM NUMBER GENERATOR CLASS
+// CLASS: FORTUNA/SALSA20 PSEUDO-RANDOM NUMBER GENERATOR
 
 
 /**
- * This class implements the Fortuna pseudo-random number generator (PRNG) algorithm, using a Salsa20 stream
- * cipher as the underlying generator.
+ * This class implements the Fortuna pseudo-random number generator (PRNG) algorithm, using a Salsa20 stream cipher as
+ * the underlying generator.
  */
 
 public class FortunaSalsa20
@@ -42,26 +41,32 @@ public class FortunaSalsa20
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The size (in bytes) of the PRNG's key, which is the key size of the Salsa20 cipher.
-	 */
+	/** The size (in bytes) of the PRNG's key, which is the key size of the Salsa20 cipher. */
 	public static final		int	KEY_SIZE	= Salsa20.KEY_SIZE;
 
+	/** The number of rounds of the Salsa20 cipher. */
 	private static final	int	NUM_ROUNDS	= 20;
 
-	private static final	String	NONCE_ENCODING_NAME	= "US-ASCII";
-	private static final	String	NONCE_STR			= "OFortuna";
+	private static final	Charset	NONCE_ENCODING	= StandardCharsets.US_ASCII;
+	private static final	String	NONCE_STR		= "OFortuna";
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	Salsa20	cipher;
+	private	long	counter;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with a random seed
-	 * derived from the sources of entropy.
+	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with a random seed derived from the
+	 * sources of entropy.
 	 * <p>
-	 * The PRNG will not be able to generate random data until sufficient entropy has accumulated for the
-	 * generator to be reseeded.  The ability to reseed can be tested with {@link #canReseed()}.
+	 * The PRNG will not be able to generate random data until sufficient entropy has accumulated for the generator to
+	 * be reseeded.  The ability to reseed can be tested with {@link #canReseed()}.
 	 * </p>
 	 */
 
@@ -73,16 +78,16 @@ public class FortunaSalsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with a specified seed.
+	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with the specified seed.
 	 * <p>
-	 * If the seed is {@code null}, a random seed derived from the sources of entropy will be used.  In this
-	 * case, the PRNG will not be able to generate random data until sufficient entropy has accumulated for
-	 * the generator to be reseeded.  The ability to reseed can be tested with {@link #canReseed()}.
+	 * If the seed is {@code null}, a random seed derived from the sources of entropy will be used.  In this case, the
+	 * PRNG will not be able to generate random data until sufficient entropy has accumulated for the generator to be
+	 * reseeded.  The ability to reseed can be tested with {@link #canReseed()}.
 	 * </p>
 	 *
-	 * @param seed  a sequence of bytes that will be used to seed the pseudo-random number generator.  If
-	 *              {@code seed} is {@code null}, a random seed derived from the sources of entropy will be
-	 *              used.
+	 * @param seed
+	 *          a sequence of bytes that will be used to seed the pseudo-random number generator.  If {@code seed} is
+	 *          {@code null}, a random seed derived from the sources of entropy will be used.
 	 */
 
 	public FortunaSalsa20(byte[] seed)
@@ -94,10 +99,11 @@ public class FortunaSalsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with a specified seed in
-	 * the form of a string.
+	 * Creates a Fortuna/Salsa20 pseudo-random number generator that is initialised with the specified seed in the form
+	 * of a string.
 	 *
-	 * @param seed  a string whose UTF-8 encoding will be used to seed the pseudo-random number generator.
+	 * @param seed
+	 *          a string whose UTF-8 encoding will be used to seed the pseudo-random number generator.
 	 */
 
 	public FortunaSalsa20(String seed)
@@ -113,21 +119,21 @@ public class FortunaSalsa20
 
 
 	/**
-	 * Creates an object that will combine data and random data generated by a PRNG with an exclusive-OR
-	 * operation.
+	 * Creates an object that will combine data and random data generated by a PRNG with an exclusive-OR operation.
 	 * <p>
-	 * The PRNG is created by this method and initialised with a specified seed.  If the seed is {@code
-	 * null}, a random seed derived from the sources of entropy will be used.  In this case, the PRNG will
-	 * not be able to generate random data until sufficient entropy has accumulated for the generator to be
-	 * reseeded.  The ability to reseed can be tested with the {@link Fortuna#canReseed() canReseed()}
-	 * method of the PRNG that is returned by {@link Fortuna.XorCombiner#getPrng()}.
+	 * The PRNG is created by this method and initialised with the specified seed.  If the seed is {@code null}, a
+	 * random seed derived from the sources of entropy will be used.  In this case, the PRNG will not be able to
+	 * generate random data until sufficient entropy has accumulated for the generator to be reseeded.  The ability to
+	 * reseed can be tested with the {@link Fortuna#canReseed() canReseed()} method of the PRNG that is returned by
+	 * {@link Fortuna.XorCombiner#getPrng()}.
 	 * </p>
 	 *
-	 * @param  seed       the seed that will be used to initialise the PRNG that will generate the random
-	 *                    data for the exclusive-OR operation.  If {@code seed} is {@code null}, a random
-	 *                    seed derived from the sources of entropy will be used.
-	 * @param  blockSize  the number of bytes of random data that will be extracted from this object's
-	 *                    PRNG with each request.
+	 * @param  seed
+	 *           the seed that will be used to initialise the PRNG that will generate the random data for the
+	 *           exclusive-OR operation.  If {@code seed} is {@code null}, a random seed derived from the sources of
+	 *           entropy will be used.
+	 * @param  blockSize
+	 *           the number of bytes of random data that will be extracted from this object's PRNG with each request.
 	 * @return an exclusive-OR combiner object.
 	 * @throws IllegalArgumentException
 	 *           if {@code blockSize} is less than 1 or greater than 2<sup>20</sup> (1048576).
@@ -148,8 +154,8 @@ public class FortunaSalsa20
 	/**
 	 * Creates a copy of this PRNG.
 	 * <p>
-	 * The copy is initially identical to this object (it has the same state and entropy pools), but the
-	 * two objects are independent.
+	 * The copy is initially identical to this object (it has the same state and entropy pools), but the two objects are
+	 * independent.
 	 * </p>
 	 *
 	 * @return a copy of this PRNG.
@@ -169,6 +175,7 @@ public class FortunaSalsa20
 	 * Initialises this PRNG's cipher.
 	 */
 
+	@Override
 	protected void initCipher()
 	{
 		cipher = new Salsa20(NUM_ROUNDS);
@@ -180,6 +187,7 @@ public class FortunaSalsa20
 	 * Resets this PRNG's cipher.
 	 */
 
+	@Override
 	protected void resetCipher()
 	{
 		cipher.reset();
@@ -191,21 +199,14 @@ public class FortunaSalsa20
 	/**
 	 * Sets the encryption key of this PRNG's cipher.
 	 *
-	 * @param key  the key that will be set as the cipher's encryption key.
-	 * @throws UnexpectedRuntimeException
-	 *           if the US-ASCII character encoding is not supported by the Java implementation.
+	 * @param key
+	 *          the key that will be set as the cipher's encryption key.
 	 */
 
+	@Override
 	protected void setCipherKey(byte[] key)
 	{
-		try
-		{
-			cipher.init(key, NONCE_STR.getBytes(NONCE_ENCODING_NAME));
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new UnexpectedRuntimeException(e);
-		}
+		cipher.init(key, NONCE_STR.getBytes(NONCE_ENCODING));
 	}
 
 	//------------------------------------------------------------------
@@ -214,6 +215,7 @@ public class FortunaSalsa20
 	 * Increments the block counter of this PRNG's cipher.
 	 */
 
+	@Override
 	protected void incrementCounter()
 	{
 		++counter;
@@ -222,13 +224,15 @@ public class FortunaSalsa20
 	//------------------------------------------------------------------
 
 	/**
-	 * Encrypts the value of the block counter with this PRNG's cipher and stores the result in a specified
-	 * buffer.
+	 * Encrypts the value of the block counter with this PRNG's cipher and stores the result in the specified buffer.
 	 *
-	 * @param buffer  the buffer in which the encrypted data will be stored.
-	 * @param offset  the offset in {@code buffer} at which the first byte of encrypted data will be stored.
+	 * @param buffer
+	 *          the buffer in which the encrypted data will be stored.
+	 * @param offset
+	 *          the offset in {@code buffer} at which the first byte of encrypted data will be stored.
 	 */
 
+	@Override
 	protected void encryptCounter(byte[] buffer,
 								  int    offset)
 	{
@@ -236,13 +240,6 @@ public class FortunaSalsa20
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	Salsa20	cipher;
-	private	long	counter;
 
 }
 

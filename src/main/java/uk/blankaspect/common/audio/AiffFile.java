@@ -46,7 +46,8 @@ import uk.blankaspect.common.misc.IDataInput;
 import uk.blankaspect.common.misc.IDoubleDataInputStream;
 import uk.blankaspect.common.misc.IDoubleDataOutputStream;
 import uk.blankaspect.common.misc.IDoubleDataSource;
-import uk.blankaspect.common.misc.NumberUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -156,7 +157,7 @@ public class AiffFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -304,7 +305,7 @@ public class AiffFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		int		numChannels;
@@ -644,7 +645,7 @@ public class AiffFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	SampleFormat	sampleFormat;
@@ -864,7 +865,7 @@ public class AiffFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	IDataInput		sampleDataInput;
@@ -1234,7 +1235,7 @@ public class AiffFile
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<IffChunk>	chunks;

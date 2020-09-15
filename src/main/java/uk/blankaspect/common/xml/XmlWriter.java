@@ -25,7 +25,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 import java.nio.charset.Charset;
@@ -90,31 +89,12 @@ public class XmlWriter
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	public XmlWriter(File   file,
-					 String encodingName)
-		throws FileNotFoundException, SecurityException, UnsupportedEncodingException
-	{
-		fileOutStream = new FileOutputStream(file);
-		init(new BufferedWriter(new OutputStreamWriter(fileOutStream, encodingName)));
-	}
-
-	//------------------------------------------------------------------
-
 	public XmlWriter(File    file,
 					 Charset encoding)
 		throws FileNotFoundException, SecurityException
 	{
 		fileOutStream = new FileOutputStream(file);
 		init(new BufferedWriter(new OutputStreamWriter(fileOutStream, encoding)));
-	}
-
-	//------------------------------------------------------------------
-
-	public XmlWriter(OutputStream outStream,
-					 String       encodingName)
-		throws UnsupportedEncodingException
-	{
-		init(new BufferedWriter(new OutputStreamWriter(outStream, encodingName)));
 	}
 
 	//------------------------------------------------------------------
@@ -183,8 +163,7 @@ public class XmlWriter
 
 	public void setLineSeparator(String lineSeparator)
 	{
-		this.lineSeparator = (lineSeparator == null) ? SystemUtils.getLineSeparator()
-													 : lineSeparator;
+		this.lineSeparator = (lineSeparator == null) ? SystemUtils.getLineSeparator() : lineSeparator;
 	}
 
 	//------------------------------------------------------------------
@@ -289,11 +268,11 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	public void writeElementStart(CharSequence    name,
-								  List<Attribute> attributes,
-								  int             indent,
-								  boolean         elementNewLine,
-								  boolean         attrNewLine)
+	public void writeElementStart(CharSequence        name,
+								  Iterable<Attribute> attributes,
+								  int                 indent,
+								  boolean             elementNewLine,
+								  boolean             attrNewLine)
 		throws IOException
 	{
 		writeSpaces(indent);
@@ -338,10 +317,10 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	public void writeEmptyElement(CharSequence    name,
-								  List<Attribute> attributes,
-								  int             indent,
-								  boolean         attrNewLine)
+	public void writeEmptyElement(CharSequence        name,
+								  Iterable<Attribute> attributes,
+								  int                 indent,
+								  boolean             attrNewLine)
 		throws IOException
 	{
 		writeEmptyElement(name, attributes, indent, true, attrNewLine);
@@ -349,11 +328,11 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	public void writeEmptyElement(CharSequence    name,
-								  List<Attribute> attributes,
-								  int             indent,
-								  boolean         elementNewLine,
-								  boolean         attrNewLine)
+	public void writeEmptyElement(CharSequence        name,
+								  Iterable<Attribute> attributes,
+								  int                 indent,
+								  boolean             elementNewLine,
+								  boolean             attrNewLine)
 		throws IOException
 	{
 		writeSpaces(indent);
@@ -378,11 +357,11 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	public void writeTextElement(CharSequence    name,
-								 List<Attribute> attributes,
-								 int             indent,
-								 boolean         attrNewLine,
-								 CharSequence    text)
+	public void writeTextElement(CharSequence        name,
+								 Iterable<Attribute> attributes,
+								 int                 indent,
+								 boolean             attrNewLine,
+								 CharSequence        text)
 		throws IOException
 	{
 		writeElementStart(name, attributes, indent, false, attrNewLine);
@@ -402,11 +381,11 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	public void writeEscapedTextElement(CharSequence    name,
-										List<Attribute> attributes,
-										int             indent,
-										boolean         attrNewLine,
-										CharSequence    text)
+	public void writeEscapedTextElement(CharSequence        name,
+										Iterable<Attribute> attributes,
+										int                 indent,
+										boolean             attrNewLine,
+										CharSequence        text)
 		throws IOException
 	{
 		writeElementStart(name, attributes, indent, false, attrNewLine);
@@ -559,11 +538,11 @@ public class XmlWriter
 
 	//------------------------------------------------------------------
 
-	private void writeAttributes(List<Attribute> attributes,
-								 int             indent)
+	private void writeAttributes(Iterable<Attribute> attributes,
+								 int                 indent)
 		throws IOException
 	{
-		for (int i = 0; i < attributes.size(); i++)
+		for (Attribute attr : attributes)
 		{
 			if (indent > 0)
 			{
@@ -571,7 +550,6 @@ public class XmlWriter
 				writeSpaces(indent);
 			}
 			write(' ');
-			Attribute attr = attributes.get(i);
 			write(attr.getName());
 			write('=');
 			writeQuoted(attr.getValue());
@@ -581,7 +559,7 @@ public class XmlWriter
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	FileOutputStream	fileOutStream;

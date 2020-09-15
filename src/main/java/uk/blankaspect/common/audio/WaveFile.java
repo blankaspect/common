@@ -46,7 +46,8 @@ import uk.blankaspect.common.misc.IDataInput;
 import uk.blankaspect.common.misc.IDoubleDataInputStream;
 import uk.blankaspect.common.misc.IDoubleDataOutputStream;
 import uk.blankaspect.common.misc.IDoubleDataSource;
-import uk.blankaspect.common.misc.NumberUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -149,7 +150,7 @@ public class WaveFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -277,7 +278,7 @@ public class WaveFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		int	kind;
@@ -609,7 +610,7 @@ public class WaveFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	SampleFormat	sampleFormat;
@@ -820,7 +821,7 @@ public class WaveFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	IDataInput		sampleDataInput;
@@ -1134,7 +1135,7 @@ public class WaveFile
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<RiffChunk>	chunks;

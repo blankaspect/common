@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import uk.blankaspect.common.misc.NumberUtils;
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 

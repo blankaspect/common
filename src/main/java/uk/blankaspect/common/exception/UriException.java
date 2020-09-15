@@ -55,9 +55,9 @@ public class UriException
 
 	public UriException(AppException.IId id,
 						URI              uri,
-						String...        substitutionStrs)
+						CharSequence...  replacements)
 	{
-		super(id, substitutionStrs);
+		super(id, replacements);
 		this.uri = uri;
 	}
 
@@ -66,9 +66,9 @@ public class UriException
 	public UriException(AppException.IId id,
 						URI              uri,
 						Throwable        cause,
-						String...        substitutionStrs)
+						CharSequence...  replacements)
 	{
-		super(id, cause, substitutionStrs);
+		super(id, cause, replacements);
 		this.uri = uri;
 	}
 
@@ -77,7 +77,7 @@ public class UriException
 	public UriException(AppException exception,
 						URI          uri)
 	{
-		this(exception.getId(), uri, exception.getCause(), exception.getSubstitutionStrings());
+		this(exception.getId(), uri, exception.getCause(), exception.getReplacements());
 	}
 
 	//------------------------------------------------------------------
@@ -106,7 +106,7 @@ public class UriException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	URI	uri;

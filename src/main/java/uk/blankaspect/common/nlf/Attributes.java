@@ -372,7 +372,7 @@ public class Attributes
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	name;
@@ -511,7 +511,7 @@ public class Attributes
 		// Call superclass constructor
 		super(document, ATTRIBUTES_ID);
 
-		// Initialise instance fields
+		// Initialise instance variables
 		setSize(0);
 		setWriter(new Writer());
 		attributes = new ArrayList<Attr>();
@@ -832,7 +832,7 @@ public class Attributes
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<Attr>	attributes;

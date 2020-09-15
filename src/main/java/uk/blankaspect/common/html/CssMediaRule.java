@@ -26,7 +26,8 @@ import java.util.List;
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.IStringKeyed;
-import uk.blankaspect.common.misc.StringUtils;
+
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ public class CssMediaRule
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	key;
@@ -222,7 +223,7 @@ public class CssMediaRule
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	EnumSet<MediaType>	mediaTypes;

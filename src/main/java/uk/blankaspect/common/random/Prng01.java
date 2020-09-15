@@ -18,8 +18,8 @@ package uk.blankaspect.common.random;
 // IMPORTS
 
 
-import uk.blankaspect.common.misc.DoubleRange;
-import uk.blankaspect.common.misc.IntegerRange;
+import uk.blankaspect.common.range.DoubleRange;
+import uk.blankaspect.common.range.IntegerRange;
 
 //----------------------------------------------------------------------
 
@@ -121,7 +121,7 @@ public strictfp class Prng01
 
 	public static int[] longToIntArray(long value)
 	{
-		return new int[]{ (int)(value >>> 32), (int)(value & 0xFFFFFFFFL) };
+		return new int[] { (int)(value >>> 32), (int)(value & 0xFFFFFFFFL) };
 	}
 
 	//------------------------------------------------------------------
@@ -272,7 +272,7 @@ public strictfp class Prng01
 		// Initialise MT state
 		setSeed((seed == null) ? getRandomisedSeed() : seed);
 
-		// Initialise instance fields
+		// Initialise instance variables
 		hasNormalNextValue = false;
 	}
 
@@ -292,14 +292,16 @@ public strictfp class Prng01
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns the next integer value from the random sequence in the range [0..{@code range-1}].
+	 * Returns the next integer value from the random sequence in the interval [0, {@code bound-1}].
 	 *
-	 * @return the next integer value from the random sequence in the range [0..{@code range-1}].
+	 * @param  bound
+	 *           the upper bound of the value.
+	 * @return the next integer value from the random sequence in the interval [0, {@code bound-1}].
 	 */
 
-	public int nextInt(int range)
+	public int nextInt(int bound)
 	{
-		long value = (long)nextInt() * (long)range;
+		long value = (long)nextInt() * (long)bound;
 		return (int)(value >>> 31);
 	}
 
@@ -422,21 +424,18 @@ public strictfp class Prng01
 
 	/**
 	 * @throws IllegalArgumentException
-	 * @throws IndexOutOfBoundsException
 	 */
 
 	public void nextBytes(byte[] buffer,
 						  int    offset,
 						  int    length)
 	{
-		final	int	BYTES_PER_INT	= Integer.SIZE / Byte.SIZE;
-
 		if (buffer == null)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Null buffer");
 		if ((offset < 0) || (offset > buffer.length))
-			throw new IndexOutOfBoundsException();
+			throw new IllegalArgumentException("Offset out of bounds");
 		if ((length < 0) || (length > buffer.length - offset))
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Length out of bounds");
 
 		int value = 0;
 		int i = 0;
@@ -446,7 +445,7 @@ public strictfp class Prng01
 			if (i == 0)
 			{
 				value = nextInt32();
-				i = BYTES_PER_INT;
+				i = Integer.BYTES;
 			}
 			--i;
 			buffer[offset++] = (byte)value;
@@ -545,14 +544,14 @@ public strictfp class Prng01
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	int	seedIndex	= ((int)System.nanoTime() & 0x7FFFFFFF) % CA_NUM_SEED_BITS;
 	private static	int	seedCells;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	int[]	mt;

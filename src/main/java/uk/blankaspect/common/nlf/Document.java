@@ -24,6 +24,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -130,6 +132,13 @@ public class Document
 	{
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Chunk	chunk;
+		private	long	offset;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -149,13 +158,6 @@ public class Document
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	Chunk	chunk;
-		private	long	offset;
 
 	}
 
@@ -181,6 +183,12 @@ public class Document
 	private class ChunkReader
 		implements Chunk.IReader
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	long	fileOffset;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -237,15 +245,18 @@ public class Document
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	long	fileOffset;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	RandomAccessFile	raFile;
+	private	ChunkList			rootList;
+	private	boolean				littleEndian;
+	private	List<ChunkOffset>	rewrites;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -262,7 +273,7 @@ public class Document
 	public Document(boolean littleEndian)
 	{
 		this.littleEndian = littleEndian;
-		rewrites = new ArrayList<ChunkOffset>();
+		rewrites = new ArrayList<>();
 	}
 
 	//------------------------------------------------------------------
@@ -772,7 +783,7 @@ public class Document
 		raFile.readFully(buffer);
 		try
 		{
-			int version = Integer.parseInt(new String(buffer, "US-ASCII"));
+			int version = Integer.parseInt(new String(buffer, StandardCharsets.US_ASCII));
 			if ((version < MIN_SUPPORTED_VERSION) || (version > MAX_SUPPORTED_VERSION))
 				throw new NlfException(ExceptionId.UNSUPPORTED_VERSION, file);
 		}
@@ -919,8 +930,7 @@ public class Document
 				throw new NlfException(ExceptionId.MALFORMED_ATTRIBUTES_CHUNK, file, offset);
 			byte[] buffer = new byte[Attributes.NAME_SIZE_SIZE];
 			raFile.readFully(buffer);
-			int nameSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) &
-																				Attributes.NAME_SIZE_MASK;
+			int nameSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) & Attributes.NAME_SIZE_MASK;
 			if ((nameSize < Attributes.MIN_NAME_SIZE) || (nameSize > Attributes.MAX_NAME_SIZE) ||
 				 (nameSize > endOffset - (offset + Attributes.NAME_SIZE_SIZE)))
 				throw new NlfException(ExceptionId.INVALID_ATTRIBUTE_NAME, file, offset);
@@ -950,10 +960,9 @@ public class Document
 				throw new NlfException(ExceptionId.MALFORMED_ATTRIBUTES_CHUNK, file, offset);
 			buffer = new byte[Attributes.VALUE_SIZE_SIZE];
 			raFile.readFully(buffer);
-			int valueSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) &
-																				Attributes.VALUE_SIZE_MASK;
-			if ((valueSize < Attributes.MIN_VALUE_SIZE) || (valueSize > Attributes.MAX_VALUE_SIZE) ||
-				 (valueSize > endOffset - (offset + Attributes.VALUE_SIZE_SIZE)))
+			int valueSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) & Attributes.VALUE_SIZE_MASK;
+			if ((valueSize < Attributes.MIN_VALUE_SIZE) || (valueSize > Attributes.MAX_VALUE_SIZE)
+				|| (valueSize > endOffset - (offset + Attributes.VALUE_SIZE_SIZE)))
 				throw new NlfException(ExceptionId.INVALID_ATTRIBUTE_VALUE, file, offset);
 
 			// Read value
@@ -963,8 +972,7 @@ public class Document
 			try
 			{
 				value = NlfUtils.utf8ToString(buffer);
-				if (!NlfUtils.isUtf8LengthWithinBounds(value, Attributes.MIN_VALUE_SIZE,
-													   Attributes.MAX_VALUE_SIZE))
+				if (!NlfUtils.isUtf8LengthWithinBounds(value, Attributes.MIN_VALUE_SIZE, Attributes.MAX_VALUE_SIZE))
 					throw new IllegalArgumentException();
 			}
 			catch (IllegalArgumentException e)
@@ -1014,8 +1022,7 @@ public class Document
 		if (endOffset - offset < Id.SIZE_SIZE)
 			throw new NlfException(ExceptionId.MALFORMED_FILE, file, offset);
 		int idSize = raFile.readByte() & Id.SIZE_MASK;
-		if ((idSize < Id.MIN_SIZE) || (idSize > Id.MAX_SIZE) ||
-			 (idSize > endOffset - (offset + Id.SIZE_SIZE)))
+		if ((idSize < Id.MIN_SIZE) || (idSize > Id.MAX_SIZE) || (idSize > endOffset - (offset + Id.SIZE_SIZE)))
 			throw new NlfException(ExceptionId.INVALID_LIST_INSTANCE_ID, file, offset);
 
 		// Read and validate list-instance identifier
@@ -1037,11 +1044,9 @@ public class Document
 			throw new NlfException(ExceptionId.MALFORMED_FILE, file, offset);
 		buffer = new byte[ChunkList.NAMESPACE_NAME_SIZE_SIZE];
 		raFile.readFully(buffer);
-		int nsNameSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) &
-																		ChunkList.NAMESPACE_NAME_SIZE_MASK;
-		if ((nsNameSize < ChunkList.MIN_NAMESPACE_NAME_SIZE) ||
-			 (nsNameSize > ChunkList.MAX_NAMESPACE_NAME_SIZE) ||
-			 (nsNameSize > endOffset - (offset + ChunkList.NAMESPACE_NAME_SIZE_SIZE)))
+		int nsNameSize = Utils.bytesToInt(buffer, 0, buffer.length, littleEndian) & ChunkList.NAMESPACE_NAME_SIZE_MASK;
+		if ((nsNameSize < ChunkList.MIN_NAMESPACE_NAME_SIZE) || (nsNameSize > ChunkList.MAX_NAMESPACE_NAME_SIZE)
+			|| (nsNameSize > endOffset - (offset + ChunkList.NAMESPACE_NAME_SIZE_SIZE)))
 			throw new NlfException(ExceptionId.INVALID_NAMESPACE_NAME, file, offset);
 
 		// Read namespace name
@@ -1266,15 +1271,6 @@ public class Document
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	RandomAccessFile	raFile;
-	private	ChunkList			rootList;
-	private	boolean				littleEndian;
-	private	List<ChunkOffset>	rewrites;
 
 }
 

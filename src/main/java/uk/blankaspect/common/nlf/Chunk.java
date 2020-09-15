@@ -608,7 +608,7 @@ public class Chunk
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int		lineLength;
@@ -1061,8 +1061,7 @@ public class Chunk
 
 	/**
 	 * Generates an XML element of the specified XML document from this chunk and returns the result.  The chunk data is
-	 * obtained from the chunk's reader, and encoded as text with the chunk's encoder.  The default encoder is the
-	 * single instance of {@link Base64Encoder}.
+	 * obtained from the chunk's reader, and encoded as text with the chunk's encoder.
 	 *
 	 * @param  xmlDocument  the XML document that will be the owner of the element that is created.
 	 * @return the XML element that is generated from this chunk.
@@ -1099,8 +1098,8 @@ public class Chunk
 					inLength = DEFAULT_INPUT_LENGTH;
 				byte[] buffer = new byte[inLength];
 
-				// Read and encode successive blocks of chunk data, appending each block to the XML element
-				// as a text node, and merging each appended text node with previous character data
+				// Read and encode successive blocks of chunk data, appending each block to the XML element as a text
+				// node, and merging each appended text node with previous character data
 				long remainingSize = size;
 				while (remainingSize > 0)
 				{
@@ -1144,7 +1143,7 @@ public class Chunk
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	Document	document;

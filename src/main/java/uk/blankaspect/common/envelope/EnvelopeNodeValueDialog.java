@@ -45,13 +45,19 @@ import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import uk.blankaspect.common.gui.DoubleSpinner;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.GuiUtils;
+import uk.blankaspect.common.range.DoubleRange;
 
-import uk.blankaspect.common.misc.DoubleRange;
-import uk.blankaspect.common.misc.KeyAction;
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.spinner.DoubleSpinner;
 
 //----------------------------------------------------------------------
 
@@ -143,7 +149,7 @@ public class EnvelopeNodeValueDialog
 
 		{
 			super(0.0, 0.0, 1.0, stepSize, maxLength, format);
-			GuiUtils.setAppFont(Constants.FontKey.TEXT_FIELD, this);
+			FontUtils.setAppFont(Constants.FontKey.TEXT_FIELD, this);
 		}
 
 		//--------------------------------------------------------------
@@ -200,7 +206,7 @@ public class EnvelopeNodeValueDialog
 		// Call superclass constructor
 		super(owner, Dialog.ModalityType.APPLICATION_MODAL);
 
-		// Initialise instance fields
+		// Initialise instance variables
 		xRange = envelopeView.getNodeXMinMax(nodeId);
 		yRange = envelopeView.getNodeYMinMax(nodeId);
 
@@ -407,8 +413,7 @@ public class EnvelopeNodeValueDialog
 											EnvelopeView    envelopeView,
 											Envelope.NodeId nodeId)
 	{
-		return new EnvelopeNodeValueDialog(GuiUtils.getWindow(parent), envelopeView, nodeId).
-																							getNodePoint();
+		return new EnvelopeNodeValueDialog(GuiUtils.getWindow(parent), envelopeView, nodeId).getNodePoint();
 	}
 
 	//------------------------------------------------------------------
@@ -464,7 +469,7 @@ public class EnvelopeNodeValueDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean		accepted;

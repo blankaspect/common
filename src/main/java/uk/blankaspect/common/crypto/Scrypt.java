@@ -2,7 +2,7 @@
 
 Scrypt.java
 
-Scrypt password-based key derivation function class.
+Class: scrypt password-based key-derivation function.
 
 \*====================================================================*/
 
@@ -18,28 +18,38 @@ package uk.blankaspect.common.crypto;
 // IMPORTS
 
 
+import java.util.Arrays;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.gui.RunnableMessageDialog;
-
 import uk.blankaspect.common.misc.IStringKeyed;
+
+import uk.blankaspect.common.thread.DaemonFactory;
 
 //----------------------------------------------------------------------
 
 
-// SCRYPT PASSWORD-BASED KEY DERIVATION FUNCTION CLASS
+// CLASS: SCRYPT PASSWORD-BASED KEY-DERIVATION FUNCTION
 
 
 /**
- * This class implements the scrypt password-based key derivation function (KDF).
- * <p>
- * The scrypt function is specified in an <a
- * href="https://tools.ietf.org/html/draft-josefsson-scrypt-kdf">IETF draft</a>.
+ * This class is an implementation of the <i>scrypt</i> password-based key derivation function (KDF).
+ * <p style="margin-bottom: 0.25em">
+ * The scrypt function is specified in <a href="https://tools.ietf.org/html/rfc7914">IETF RFC 7914</a>.  This
+ * implementation differs from the specification in two respects:
  * </p>
+ * <ul style="margin-top: 0.25em">
+ *   <li>A core hash function of a suitable cipher other than Salsa20 (eg, ChaCha20) may be used.  The core hash
+ *       function is a parameter of the constructor.</li>
+ *   <li>The number of rounds of the core hash function is not fixed at 8: this implementation supports 8, 12, 16 and
+ *       20 rounds.  The number of rounds is a parameter of the constructor.</li>
+ * </ul>
+ * @see ScryptChaCha20
+ * @see ScryptSalsa20
  */
 
 public class Scrypt
@@ -49,76 +59,61 @@ public class Scrypt
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The minimum value of CPU/memory cost parameter, which is the binary logarithm of the <i>N</i>
-	 * parameter (CPU/memory cost) of the scrypt algorithm.
-	 */
+	/** The minimum value of CPU/memory cost parameter, which is the binary logarithm of the <i>N</i> parameter
+		(CPU/memory cost) of the scrypt algorithm. */
 	public static final		int	MIN_COST	= 1;
 
-	/**
-	 * The maximum value of CPU/memory cost parameter, which is the binary logarithm of the <i>N</i>
-	 * parameter (CPU/memory cost) of the scrypt algorithm.
-	 */
+	/** The maximum value of CPU/memory cost parameter, which is the binary logarithm of the <i>N</i> parameter
+		(CPU/memory cost) of the scrypt algorithm. */
 	public static final		int	MAX_COST	= 24;
 
-	/**
-	 * The minimum value of the <i>r</i> parameter (block size) of the scrypt algorithm.
-	 */
+	/** The minimum value of the <i>r</i> parameter (block size) of the scrypt algorithm. */
 	public static final		int	MIN_NUM_BLOCKS	= 1;
 
-	/**
-	 * The maximum value of the <i>r</i> parameter (block size) of the scrypt algorithm.
-	 */
+	/** The maximum value of the <i>r</i> parameter (block size) of the scrypt algorithm. */
 	public static final		int	MAX_NUM_BLOCKS	= 1024;
 
-	/**
-	 * The minimum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm.
-	 */
-	public static final		int	MIN_NUM_PARALLEL_BLOCKS	= 1;
+	/** The minimum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm. */
+	public static final		int	MIN_NUM_SUPERBLOCKS	= 1;
 
-	/**
-	 * The maximum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm.
-	 */
-	public static final		int	MAX_NUM_PARALLEL_BLOCKS	= 64;
+	/** The maximum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm. */
+	public static final		int	MAX_NUM_SUPERBLOCKS	= 64;
 
-	/**
-	 * The minimum number of threads that may be created to perform the parallel processing of superblocks
-	 * at the highest level of the scrypt algorithm.
-	 */
+	/** The minimum number of threads that may be created to perform the parallel processing of superblocks at the
+		highest level of the scrypt algorithm. */
 	public static final		int	MIN_NUM_THREADS	= 1;
 
-	/**
-	 * The maximum number of threads that may be created to perform the parallel processing of superblocks
-	 * at the highest level of the scrypt algorithm.
-	 */
+	/** The maximum number of threads that may be created to perform the parallel processing of superblocks at the
+		highest level of the scrypt algorithm. */
 	public static final		int	MAX_NUM_THREADS	= 64;
 
-	private static final	int	BYTES_PER_INT	= Integer.SIZE / Byte.SIZE;
+	/** The size (in bytes) of a block of the core hash function. */
+	private static final	int	CORE_HASH_BLOCK_SIZE	= 64;
 
-	private static final	int	SALSA20_CORE_BLOCK_SIZE		= 64;
-	private static final	int	SALSA20_CORE_BLOCK_NUM_INTS	= SALSA20_CORE_BLOCK_SIZE / BYTES_PER_INT;
+	/** The size (in bytes) of a block. */
+	private static final	int	BLOCK_SIZE		= 2 * CORE_HASH_BLOCK_SIZE;
 
-	private static final	int	BLOCK_SIZE		= 2 * SALSA20_CORE_BLOCK_SIZE;
-	private static final	int	BLOCK_NUM_INTS	= BLOCK_SIZE / BYTES_PER_INT;
+	/** The size (in ints) of a block. */
+	private static final	int	BLOCK_SIZE_INTS	= BLOCK_SIZE / Integer.BYTES;
 
 ////////////////////////////////////////////////////////////////////////
 //  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
 
-	// NUMBER OF ROUNDS, SALSA20 CORE
+	// ENUMERATION: NUMBER OF ROUNDS OF CORE HASH FUNCTION
 
 
 	/**
-	 * This is an enumeration of the possible values for the number of rounds of the Salsa20 core hash
-	 * function, which performs the lowest level of mixing in the scrypt algorithm.
+	 * This is an enumeration of the possible values for the number of rounds of the core hash function, which performs
+	 * the lowest level of mixing in the scrypt algorithm.
 	 * <p>
-	 * In the scrypt specification, the number of rounds of the Salsa20 core is fixed at 8, but this
-	 * implementation allows 8, 12, 16 or 20 rounds.
+	 * In the scrypt specification, the number of rounds of the core hash function is fixed at 8, but this
+	 * implementation supports 8, 12, 16 and 20 rounds.
 	 * </p>
 	 */
 
-	public enum Salsa20NumRounds
+	public enum CoreHashNumRounds
 		implements IStringKeyed
 	{
 
@@ -126,24 +121,52 @@ public class Scrypt
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
+		/**
+		 * 8 rounds.
+		 */
 		_8  (8),
+
+		/**
+		 * 12 rounds.
+		 */
 		_12 (12),
+
+		/**
+		 * 16 rounds.
+		 */
 		_16 (16),
+
+		/**
+		 * 20 rounds.
+		 */
 		_20 (20);
 
 		//--------------------------------------------------------------
 
-		/**
-		 * The default number of rounds of the Salsa20 core.
-		 */
-		public static final	Salsa20NumRounds	DEFAULT	= Salsa20NumRounds._8;
+		/** The default number of rounds of the core hash function. */
+		public static final	CoreHashNumRounds	DEFAULT	= CoreHashNumRounds._8;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		/** The number of rounds. */
+		private	int	value;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
-		private Salsa20NumRounds(int value)
+		/**
+		 * Creates a new instance of an enumeration constant for the number of rounds of the core hash function.
+		 *
+		 * @param value
+		 *          the number of rounds.
+		 */
+
+		private CoreHashNumRounds(int value)
 		{
+			// Initialise instance variables
 			this.value = value;
 		}
 
@@ -154,21 +177,20 @@ public class Scrypt
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns the enum constant corresponding to a specified number of rounds.
+		 * Returns the enumeration constant corresponding to the specified number of rounds.
 		 *
-		 * @param  numRounds  the number of rounds for which the enum constant is sought.
-		 * @return the enum constant corresponding to the specified number of rounds, or {@code null} if
-		 *         {@code numRounds} does not correspond to a supported value.
+		 * @param  numRounds
+		 *           the number of rounds for which the enumeration constant is sought.
+		 * @return the enumeration constant corresponding to the specified number of rounds, or {@code null} if {@code
+		 *         numRounds} does not correspond to a supported value.
 		 */
 
-		public static Salsa20NumRounds forNumRounds(int numRounds)
+		public static CoreHashNumRounds forNumRounds(int numRounds)
 		{
-			for (Salsa20NumRounds value : values())
-			{
-				if (value.value == numRounds)
-					return value;
-			}
-			return null;
+			return Arrays.stream(values())
+							.filter(value -> value.value == numRounds)
+							.findFirst()
+							.orElse(null);
 		}
 
 		//--------------------------------------------------------------
@@ -178,11 +200,12 @@ public class Scrypt
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns the key of this enum constant.
+		 * Returns the key of this enumeration constant.
 		 *
-		 * @return the key of this enum constant.
+		 * @return the key of this enumeration constant.
 		 */
 
+		@Override
 		public String getKey()
 		{
 			return Integer.toString(value);
@@ -195,9 +218,9 @@ public class Scrypt
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns a string representation of this enum constant.
+		 * Returns a string representation of this enumeration constant.
 		 *
-		 * @return a string representation of this enum constant.
+		 * @return a string representation of this enumeration constant.
 		 */
 
 		@Override
@@ -213,9 +236,9 @@ public class Scrypt
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns the number of rounds of the Salsa20 core as an integer.
+		 * Returns the number of rounds of the core hash function.
 		 *
-		 * @return the number of rounds of the Salsa20 core as an integer.
+		 * @return the number of rounds of the core hash function.
 		 */
 
 		public int getValue()
@@ -225,11 +248,47 @@ public class Scrypt
 
 		//--------------------------------------------------------------
 
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member interfaces
+////////////////////////////////////////////////////////////////////////
+
+
+	// INTERFACE: CORE HASH FUNCTION
+
+
+	/**
+	 * This functional interface defines the method that must be implemented by a core hash function of the
+	 * <i>scrypt</i> key-derivation function.
+	 */
+
+	@FunctionalInterface
+	public interface ICoreHashFunction
+	{
+
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Methods
 	////////////////////////////////////////////////////////////////////
 
-		private	int	value;
+		/**
+		 * Creates a hash of the specified input data and stores it in the specified array.
+		 *
+		 * @param inData
+		 *          the input data that will be hashed.
+		 * @param outData
+		 *          a hash of the input data.
+		 * @param numRounds
+		 *          the number of rounds of the hash function.
+		 */
+
+		void hash(int[] inData,
+				  int[] outData,
+				  int   numRounds);
+
+		//--------------------------------------------------------------
 
 	}
 
@@ -240,7 +299,7 @@ public class Scrypt
 ////////////////////////////////////////////////////////////////////////
 
 
-	// FUNCTION PARAMETERS CLASS
+	// CLASS: FUNCTION PARAMETERS
 
 
 	/**
@@ -252,13 +311,13 @@ public class Scrypt
 	 * <ul>
 	 *   <li>cost : CPU/memory cost, <i>N</i></li>
 	 *   <li>numBlocks : block size, <i>r</i></li>
-	 *   <li>numParallelBlocks : parallelisation, <i>p</i></li>
+	 *   <li>numSuperblocks : parallelisation, <i>p</i></li>
 	 * </ul>
 	 * <p>
 	 * <b>Note:</b><br>
-	 * In this implementation of the scrypt algorithm, the CPU/memory cost parameter is the binary logarithm
-	 * of the <i>N</i> parameter in the scrypt specification; that is, the value of <i>N</i> in the scrypt
-	 * specification is 2 raised to the power of the value of the parameter in this implementation.
+	 * In this implementation of the scrypt algorithm, the CPU/memory cost parameter is the binary logarithm of the
+	 * <i>N</i> parameter in the scrypt specification; that is, the value of <i>N</i> in the scrypt specification is 2
+	 * raised to the power of the value of the parameter in this implementation.
 	 * </p>
 	 */
 
@@ -267,26 +326,41 @@ public class Scrypt
 	{
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		/** The binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>. */
+		private	int	cost;
+
+		/** The number of blocks: the scrypt block size parameter, <i>r</i>. */
+		private	int	numBlocks;
+
+		/** The number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>. */
+		private	int	numSuperblocks;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates a set of parameters of the scrypt algorithm, with a specified value for each of the three
-		 * parameters.
+		 * Creates a set of parameters of the scrypt algorithm with the specified values.
 		 *
-		 * @param cost               the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
-		 * @param numBlocks          the number of blocks: the scrypt block size parameter, <i>r</i>.
-		 * @param numParallelBlocks  the number of parallel superblocks: the scrypt parallelisation
-		 *                           parameter, <i>p</i>.
+		 * @param cost
+		 *          the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
+		 * @param numBlocks
+		 *          the number of blocks: the scrypt block size parameter, <i>r</i>.
+		 * @param numSuperblocks
+		 *          the number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>.
 		 */
 
 		public Params(int cost,
 					  int numBlocks,
-					  int numParallelBlocks)
+					  int numSuperblocks)
 		{
+			// Initialise instance variables
 			this.cost = cost;
 			this.numBlocks = numBlocks;
-			this.numParallelBlocks = numParallelBlocks;
+			this.numSuperblocks = numSuperblocks;
 		}
 
 		//--------------------------------------------------------------
@@ -317,114 +391,151 @@ public class Scrypt
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance methods : overriding methods
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * The binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
+		 * Returns the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
+		 *
+		 * @return the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
 		 */
-		public	int	cost;
+
+		public int getCost()
+		{
+			return cost;
+		}
+
+		//--------------------------------------------------------------
 
 		/**
-		 * The number of blocks: the scrypt block size parameter, <i>r</i>.
+		 * Returns the number of blocks: the scrypt block size parameter, <i>r</i>.
+		 *
+		 * @return the number of blocks: the scrypt block size parameter, <i>r</i>.
 		 */
-		public	int	numBlocks;
+
+		public int getNumBlocks()
+		{
+			return numBlocks;
+		}
+
+		//--------------------------------------------------------------
 
 		/**
-		 * The number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>.
+		 * Returns the number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>.
+		 *
+		 * @return the number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>.
 		 */
-		public	int	numParallelBlocks;
+
+		public int getNumSuperblocks()
+		{
+			return numSuperblocks;
+		}
+
+		//--------------------------------------------------------------
 
 	}
 
 	//==================================================================
 
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
 
-	// KEY GENERATOR CLASS
+
+	// CLASS: KEY GENERATOR
 
 
 	/**
-	 * This class implements a convenient mechanism for running the scrypt key derivation function (KDF) in
-	 * its own thread.
+	 * This class implements a convenient mechanism for running the scrypt key-derivation function (KDF) on its own
+	 * thread.
 	 * <p>
-	 * It is intended that the KDF be run by invoking the {@link KeyGenerator#run() run()} method of this
-	 * class from an instance of {@code uk.blankaspect.common.gui.RunnableMessageDialog}.  The {@link
-	 * KeyGenerator#run() run()} method handles the two expected error conditions,
-	 * {@code IllegalArgumentException} and {@code OutOfMemoryError}, by setting flags that can be tested by
-	 * the caller.
+	 * It is intended that the KDF be run by invoking the {@link KeyGenerator#run() run()} method of this class.  The
+	 * {@link KeyGenerator#run() run()} method handles the two expected error conditions, {@code
+	 * IllegalArgumentException} and {@code OutOfMemoryError}, by setting flags that can be tested by the caller.
 	 * </p>
 	 */
 
-	public static class KeyGenerator
-		implements RunnableMessageDialog.IRunnable
+	public class KeyGenerator
+		implements Runnable
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		/** The key from which the generated key is derived. */
+		private	byte[]			key;
+
+		/** The salt from which the generated key is derived. */
+		private	byte[]			salt;
+
+		/** The parameters of the key-derivation function. */
+		private	Scrypt.Params	params;
+
+		/** The maximum number of threads that should be allocated for the processing of parallel superblocks in the
+			key-derivation function. */
+		private	int				maxNumThreads;
+
+		/** The length (in bytes) of the derived key. */
+		private	int				outKeyLength;
+
+		/** The derived key. */
+		private	byte[]			derivedKey;
+
+		/** Flag: if {@code true}, a parameter of the key-derivation function was invalid. */
+		private	boolean			invalidParameterValue;
+
+		/** Flag: if {@code true}, an {@code OutOfMemoryError} was thrown. */
+		private	boolean			outOfMemory;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates an instance of {@code KeyGenerator} for deriving a key from a specified key and salt by
-		 * means of the scrypt key derivation function with the specified KDF parameters.
+		 * Creates a new instance of {@code KeyGenerator} for deriving a key from the specified key and salt by means of
+		 * the scrypt key-derivation function with the specified KDF parameters.
 		 *
-		 * @param key            the key from which the key will be derived.
-		 * @param salt           the salt from which the key will be derived.
-		 * @param params         the parameters of the KDF that will derive the key.
-		 * @param maxNumThreads  the maximum number of threads that should be allocated for the processing
-		 *                       of parallel superblocks in the KDF.
-		 * @param outKeyLength   the length (in bytes) of the derived key, which must be a positive integral
-		 *                       multiple of 32.
-		 * @param messageStr     the message that will be displayed in the dialog if the KDF is run from an
-		 *                       instance of {@code uk.blankaspect.common.gui.RunnableMessageDialog}.
+		 * @param key
+		 *          the key from which the generated key will be derived.
+		 * @param salt
+		 *          the salt from which the generated key will be derived.
+		 * @param params
+		 *          the parameters of the key-derivation function.
+		 * @param maxNumThreads
+		 *          the maximum number of threads that should be allocated for the processing of parallel superblocks in
+		 *          the key-derivation function.
+		 * @param outKeyLength
+		 *          the length (in bytes) of the derived key, which must be a positive integral multiple of 32.
 		 */
 
-		public KeyGenerator(byte[]        key,
-							byte[]        salt,
-							Scrypt.Params params,
-							int           maxNumThreads,
-							int           outKeyLength,
-							String        messageStr)
+		private KeyGenerator(byte[]        key,
+							 byte[]        salt,
+							 Scrypt.Params params,
+							 int           maxNumThreads,
+							 int           outKeyLength)
 		{
+			// Initialise instance variables
 			this.key = key;
 			this.salt = salt;
 			this.params = params;
 			this.maxNumThreads = maxNumThreads;
 			this.outKeyLength = outKeyLength;
-			this.messageStr = messageStr;
 		}
 
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance methods : RunnableMessageDialog.IRunnable interface
+	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns the message for this generator.
+		 * Runs the scrypt key-derivation function using the key, salt and KDF parameters that were specified when this
+		 * object was created.
 		 * <p>
-		 * If the {@link KeyGenerator#run() run()} method of this generator is invoked from an instance of
-		 * {@code uk.blankaspect.common.gui.RunnableMessageDialog}, the message will be displayed in the
-		 * dialog.
-		 * </p>
-		 *
-		 * @return the message for this generator.
-		 */
-
-		@Override
-		public String getMessage()
-		{
-			return messageStr;
-		}
-
-		//--------------------------------------------------------------
-
-		/**
-		 * Runs the scrypt key derivation function using the key, salt and KDF parameters that were
-		 * specified when this object was created.
-		 * <p>
-		 * The two expected error conditions, {@code IllegalArgumentException} and {@code OutOfMemoryError},
-		 * are handled by setting flags that can be tested by the caller with {@link
-		 * #isInvalidParameterValue()} and {@code #isOutOfMemory()} respectively.
+		 * The two expected error conditions, {@code IllegalArgumentException} and {@code OutOfMemoryError}, are handled
+		 * by setting flags that can be tested by the caller with {@link #isInvalidParameterValue()} and {@code
+		 * #isOutOfMemory()} respectively.
 		 * </p>
 		 * <p>
 		 * If the KDF completes normally, the derived key can be accessed with {@link #getDerivedKey()}.
@@ -455,11 +566,11 @@ public class Scrypt
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns {@code true} if a parameter of the scrypt KDF was invalid when the KDF was executed from
-		 * this object's {@link #run()} method.
+		 * Returns {@code true} if a parameter of the scrypt KDF was invalid when the KDF was executed from this
+		 * generator's {@link #run()} method.
 		 *
-		 * @return {@code true} if a parameter of the scrypt KDF was invalid when the KDF was executed from
-		 *         this object's {@link #run()} method, {@code false} otherwise.
+		 * @return {@code true} if a parameter of the scrypt KDF was invalid when the KDF was executed from this
+		 *         generator's {@link #run()} method, {@code false} otherwise.
 		 * @see    #run()
 		 */
 
@@ -471,11 +582,11 @@ public class Scrypt
 		//--------------------------------------------------------------
 
 		/**
-		 * Returns {@code true} if there was not enough memory for the scrypt KDF when it was executed from
-		 * this object's {@link #run()} method.
+		 * Returns {@code true} if there was not enough memory for the scrypt KDF when it was executed from this
+		 * generator's {@link #run()} method.
 		 *
-		 * @return {@code true} if there was not enough memory for the scrypt KDF when it was executed from
-		 *         this object's {@link #run()} method, {@code false} otherwise.
+		 * @return {@code true} if there was not enough memory for the scrypt KDF when it was executed from this
+		 *         generator's {@link #run()} method, {@code false} otherwise.
 		 * @see    #run()
 		 */
 
@@ -487,12 +598,12 @@ public class Scrypt
 		//--------------------------------------------------------------
 
 		/**
-		 * Returns the key that was derived by the scrypt KDF when it was executed from this object's {@link
-		 * #run()} method.
+		 * Returns the key that was derived by the scrypt KDF when it was executed from this object's {@link #run()}
+		 * method.
 		 *
-		 * @return the key that was derived by the scrypt KDF when it was executed from this object's {@link
-		 *         #run()} method.  The returned value will be {@code null} if the KDF has not been executed
-		 *         or if it did not complete normally.
+		 * @return the key that was derived by the scrypt KDF when it was executed from this object's {@link #run()}
+		 *         method.  The returned value will be {@code null} if the KDF has not been executed or if it did not
+		 *         complete normally.
 		 */
 
 		public byte[] getDerivedKey()
@@ -502,203 +613,99 @@ public class Scrypt
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	byte[]			key;
-		private	byte[]			salt;
-		private	Scrypt.Params	params;
-		private	int				maxNumThreads;
-		private	int				outKeyLength;
-		private	String			messageStr;
-		private	byte[]			derivedKey;
-		private	boolean			invalidParameterValue;
-		private	boolean			outOfMemory;
-
 	}
 
 	//==================================================================
 
+////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
 
-	// MIXER CLASS
+	/** The index of the next thread that is created when deriving a key. */
+	private static	int	threadIndex;
 
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * This class implements the mixing of a parallel superblock at the highest level of the scrypt key
-	 * derivation function.
-	 * <p>
-	 * The superblocks of the scrypt KDF can be processed independently of each other, which makes the set
-	 * of tasks suitable for execution in parallel.  Multiple instances of this class are created and their
-	 * {@link Mixer#run() run()} methods executed concurrently in separate threads that are created by the
-	 * {@link Scrypt#deriveKey(byte[], byte[], int, int, int, int, int)} method.
-	 * </p>
-	 */
+	/** The number of rounds of the core hash function. */
+	private CoreHashNumRounds	coreHashNumRounds;
 
-	private static class Mixer
-		implements Runnable
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Mixer(byte[] data,
-					  int    offset,
-					  int    length,
-					  int    cost)
-		{
-			this.data = data;
-			this.offset = offset;
-			this.length = length;
-			this.cost = cost;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Runnable interface
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Mixes a single superblock at the highest level of the scrypt KDF.
-		 */
-
-		public void run()
-		{
-			try
-			{
-				// Convert the key data to integers
-				int[] buffer = new int[length];
-				int j = offset;
-				for (int i = 0; i < length; i++)
-					buffer[i] = (data[j++] & 0xFF) | (data[j++] & 0xFF) << 8 |
-													(data[j++] & 0xFF) << 16 | (data[j++] & 0xFF) << 24;
-
-				// Mix the key data
-				sMix(buffer, buffer, cost);
-
-				// Convert the mixed key data back to bytes
-				j = offset;
-				for (int i = 0; i < length; i++)
-				{
-					int value = buffer[i];
-					data[j++] = (byte)value;
-					data[j++] = (byte)(value >>> 8);
-					data[j++] = (byte)(value >>> 16);
-					data[j++] = (byte)(value >>> 24);
-				}
-			}
-			catch (OutOfMemoryError e)
-			{
-				outOfMemory = true;
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class fields
-	////////////////////////////////////////////////////////////////////
-
-		private static volatile	boolean	outOfMemory;
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	byte[]	data;
-		private	int		offset;
-		private	int		length;
-		private	int		cost;
-
-	}
-
-	//==================================================================
+	/** The core hash function. */
+	private ICoreHashFunction	coreHashFunction;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Creates an instance of the {@code Scrypt} class, whose methods implement the scrypt key derivation
-	 * function.
-	 * <p>
-	 * All the methods of the {@code Scrypt} class are static, but this constructor has protected access to
-	 * allow inheritance.
-	 * </p>
+	 * Creates a new instance of a scrypt password-based key-derivation function with the specified core hash function
+	 * and number of rounds of that function.
+	 *
+	 * @param coreHashNumRounds
+	 *          the number of rounds of the core hash function.
+	 * @param coreHashFunction
+	 *          the core hash function.
 	 */
 
-	protected Scrypt()
+	public Scrypt(CoreHashNumRounds coreHashNumRounds,
+				  ICoreHashFunction coreHashFunction)
 	{
+		// Validate arguments
+		if (coreHashNumRounds == null)
+			throw new IllegalArgumentException("Null core hash number of rounds");
+		if (coreHashFunction == null)
+			throw new IllegalArgumentException("Null core hash function");
+
+		// Initialise instance variables
+		this.coreHashNumRounds = coreHashNumRounds;
+		this.coreHashFunction = coreHashFunction;
 	}
 
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class methods
+//  Instance methods
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Returns the number of rounds of the Salsa20 core that will be performed by the scrypt key derivation
+	 * Returns the number of rounds of the core hash function that will be performed by the scrypt key-derivation
 	 * function.
 	 * <p>
-	 * In the scrypt specification, the number of rounds is fixed at 8, but this implementation allows the
-	 * number of rounds to be 8, 12, 16 or 20.
+	 * In the scrypt specification, the number of rounds is fixed at 8, but this implementation supports 8, 12, 16 and
+	 * 20 rounds.
 	 * </p>
 	 * <p>
 	 * The default value is 8.
 	 * </p>
 	 *
-	 * @return the number of rounds of the Salsa20 core that will be performed by the scrypt key derivation
+	 * @return the number of rounds of the core hash function that will be performed by the scrypt key-derivation
 	 *         function.
-	 * @see    #setSalsa20CoreNumRounds(Salsa20NumRounds)
+	 * @see    #setCoreHashNumRounds(CoreHashNumRounds)
 	 */
 
-	public static Salsa20NumRounds getSalsa20CoreNumRounds()
+	public CoreHashNumRounds getCoreHashNumRounds()
 	{
-		return salsa20CoreNumRounds;
+		return coreHashNumRounds;
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Sets the number of rounds of the Salsa20 core that will be performed by the scrypt key derivation
-	 * function.
-	 * <p>
-	 * In the scrypt specification, the number of rounds is fixed at 8, but this implementation allows the
-	 * number of rounds to be 8, 12, 16 or 20.
-	 * </p>
+	 * Derives a key from the specified key and salt using the scrypt key-derivation function with the specified
+	 * parameters, and returns the derived key.
 	 *
-	 * @param  numRounds  the number of rounds of the Salsa20 core that will be performed by the scrypt key
-	 *                    derivation function.
-	 * @throws IllegalArgumentException
-	 *           if {@code numRounds} is {@code null}.
-	 * @see    #getSalsa20CoreNumRounds()
-	 */
-
-	public static void setSalsa20CoreNumRounds(Salsa20NumRounds numRounds)
-	{
-		if (numRounds == null)
-			throw new IllegalArgumentException();
-
-		salsa20CoreNumRounds = numRounds;
-	}
-
-	//------------------------------------------------------------------
-
-	/**
-	 * Derives a key from a specified key and salt using the scrypt key derivation function with the
-	 * specified parameters, and returns the derived key.
-	 *
-	 * @param  key            the key from which the key will be derived.
-	 * @param  salt           the salt from which the key will be derived.
-	 * @param  params         the parameters of the scrypt algorithm: CPU/memory cost, block size and
-	 *                        parallelisation.
-	 * @param  maxNumThreads  the maximum number of threads that will be created to perform the mixing of
-	 *                        the parallel superblocks at the highest level of the KDF.
-	 * @param  outKeyLength   the length (in bytes) of the derived key, which must be a positive integral
-	 *                        multiple of 32.
+	 * @param  key
+	 *           the key from which the key will be derived.
+	 * @param  salt
+	 *           the salt from which the key will be derived.
+	 * @param  params
+	 *           the parameters of the scrypt algorithm: CPU/memory cost, block size and parallelisation.
+	 * @param  maxNumThreads
+	 *           the maximum number of threads that will be created to perform the mixing of the parallel superblocks at
+	 *           the highest level of the KDF.
+	 * @param  outKeyLength
+	 *           the length (in bytes) of the derived key, which must be a positive integral multiple of 32.
 	 * @return a derived key of length {@code outKeyLength}.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -707,7 +714,7 @@ public class Scrypt
 	 *             <li>{@code salt} is {@code null}, or</li>
 	 *             <li>{@code params.cost} is less than 1 or greater than 24, or</li>
 	 *             <li>{@code params.numBlocks} is less than 1 or greater than 1024, or</li>
-	 *             <li>{@code params.numParallelBlocks} is less than 1 or greater than 64, or</li>
+	 *             <li>{@code params.numSuperblocks} is less than 1 or greater than 64, or</li>
 	 *             <li>{@code maxNumThreads} is less than 1 or greater than 64, or</li>
 	 *             <li>{@code outKeyLength} is not a positive integral multiple of 32.</li>
 	 *           </ul>
@@ -715,32 +722,37 @@ public class Scrypt
 	 * @see    Scrypt.Params
 	 */
 
-	public static byte[] deriveKey(byte[] key,
-								   byte[] salt,
-								   Params params,
-								   int    maxNumThreads,
-								   int    outKeyLength)
+	public byte[] deriveKey(byte[] key,
+							byte[] salt,
+							Params params,
+							int    maxNumThreads,
+							int    outKeyLength)
 	{
-		return deriveKey(key, salt, params.cost, params.numBlocks, params.numParallelBlocks, maxNumThreads,
+		return deriveKey(key, salt, params.cost, params.numBlocks, params.numSuperblocks, maxNumThreads,
 						 outKeyLength);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Derives a key from a specified key and salt using the scrypt key derivation function with the
-	 * specified parameters, and returns the derived key.
+	 * Derives a key from the specified key and salt using the scrypt key-derivation function with the specified
+	 * parameters, and returns the derived key.
 	 *
-	 * @param  key                the key from which the key will be derived.
-	 * @param  salt               the salt from which the key will be derived.
-	 * @param  cost               the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
-	 * @param  numBlocks          the number of blocks: the scrypt block size parameter, <i>r</i>.
-	 * @param  numParallelBlocks  the number of parallel superblocks: the scrypt parallelisation
-	 *                            parameter, <i>p</i>.
-	 * @param  maxNumThreads      the maximum number of threads that will be created to perform the mixing
-	 *                            of the parallel superblocks at the highest level of the KDF.
-	 * @param  outKeyLength       the length (in bytes) of the derived key, which must be a positive
-	 *                            integral multiple of 32.
+	 * @param  key
+	 *           the key from which the key will be derived.
+	 * @param  salt
+	 *           the salt from which the key will be derived.
+	 * @param  cost
+	 *           the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
+	 * @param  numBlocks
+	 *           the number of blocks: the scrypt block size parameter, <i>r</i>.
+	 * @param  numSuperblocks
+	 *           the number of parallel superblocks: the scrypt parallelisation parameter, <i>p</i>.
+	 * @param  maxNumThreads
+	 *           the maximum number of threads that will be created to perform the mixing of the parallel superblocks at
+	 *           the highest level of the KDF.
+	 * @param  outKeyLength
+	 *           the length (in bytes) of the derived key, which must be a positive integral multiple of 32.
 	 * @return a derived key of length {@code outKeyLength}.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -749,50 +761,95 @@ public class Scrypt
 	 *             <li>{@code salt} is {@code null}, or</li>
 	 *             <li>{@code cost} is less than 1 or greater than 24, or</li>
 	 *             <li>{@code numBlocks} is less than 1 or greater than 1024, or</li>
-	 *             <li>{@code numParallelBlocks} is less than 1 or greater than 64, or</li>
+	 *             <li>{@code numSuperblocks} is less than 1 or greater than 64, or</li>
 	 *             <li>{@code maxNumThreads} is less than 1 or greater than 64, or</li>
 	 *             <li>{@code outKeyLength} is not a positive integral multiple of 32.</li>
 	 *           </ul>
 	 * @see    #deriveKey(byte[], byte[], Params, int, int)
 	 */
 
-	public static byte[] deriveKey(byte[] key,
-								   byte[] salt,
-								   int    cost,
-								   int    numBlocks,
-								   int    numParallelBlocks,
-								   int    maxNumThreads,
-								   int    outKeyLength)
+	public byte[] deriveKey(byte[] key,
+							byte[] salt,
+							int    cost,
+							int    numBlocks,
+							int    numSuperblocks,
+							int    maxNumThreads,
+							int    outKeyLength)
 	{
-		final	int	NUM_ITERATIONS	= 1;
+		final	int	NUM_HMAC_ITERATIONS	= 1;
 
 		// Validate arguments
-		if ((key == null) || (salt == null) ||
-			 (cost < MIN_COST) || (cost > MAX_COST) ||
-			 (numBlocks < MIN_NUM_BLOCKS) || (numBlocks > MAX_NUM_BLOCKS) ||
-			 (numParallelBlocks < MIN_NUM_PARALLEL_BLOCKS) ||
-			 (numParallelBlocks > MAX_NUM_PARALLEL_BLOCKS) ||
-			 (maxNumThreads < MIN_NUM_THREADS) || (maxNumThreads > MAX_NUM_THREADS) ||
-			 (outKeyLength <= 0) || (outKeyLength % HmacSha256.HASH_VALUE_SIZE != 0))
-			throw new IllegalArgumentException();
+		if (key == null)
+			throw new IllegalArgumentException("Null key");
+		if (salt == null)
+			throw new IllegalArgumentException("Null salt");
+		if ((cost < MIN_COST) || (cost > MAX_COST))
+			throw new IllegalArgumentException("Cost out of bounds");
+		if ((numBlocks < MIN_NUM_BLOCKS) || (numBlocks > MAX_NUM_BLOCKS))
+			throw new IllegalArgumentException("Number of blocks out of bounds");
+		if ((numSuperblocks < MIN_NUM_SUPERBLOCKS) || (numSuperblocks > MAX_NUM_SUPERBLOCKS))
+			throw new IllegalArgumentException("Number of superblocks out of bounds");
+		if ((maxNumThreads < MIN_NUM_THREADS) || (maxNumThreads > MAX_NUM_THREADS))
+			throw new IllegalArgumentException("Maximum number of threads out of bounds");
+		if ((outKeyLength <= 0) || (outKeyLength % HmacSha256.HASH_VALUE_SIZE != 0))
+			throw new IllegalArgumentException("Invalid output key length");
 
-		// Maximise available memory
-		System.gc();
+		// Define class for local variables
+		class Vars
+		{
+			boolean outOfMemory;
+		}
+
+		// Initialise local variables
+		Vars vars = new Vars();
 
 		// Generate key data from the input key and salt
-		int parallelBlockSize = numBlocks * BLOCK_SIZE;
-		byte[] keyData = pbkdf2HmacSha256(key, salt, NUM_ITERATIONS,
-										  numParallelBlocks * parallelBlockSize);
+		int superblockSize = numBlocks * BLOCK_SIZE;
+		byte[] keyData = pbkdf2HmacSha256(key, salt, NUM_HMAC_ITERATIONS, numSuperblocks * superblockSize);
 
-		// Mix the key data using a thread pool
-		Mixer.outOfMemory = false;
-		ExecutorService executor =
-							Executors.newFixedThreadPool(Math.min(numParallelBlocks, maxNumThreads));
-		for (int offset = 0; offset < keyData.length; offset += parallelBlockSize)
+		// Mix the key data using a thread pool.
+		// The superblocks of the scrypt KDF can be processed independently of each other, which makes the set of tasks
+		// suitable for execution in parallel
+		ExecutorService executor = Executors.newFixedThreadPool(Math.min(numSuperblocks, maxNumThreads), runnable ->
+				DaemonFactory.create(getClass().getSimpleName() + "-" + threadIndex++, runnable));
+		for (int offset = 0; offset < keyData.length; offset += superblockSize)
 		{
-			executor.execute(new Mixer(keyData, offset, numBlocks * BLOCK_NUM_INTS, cost));
-			if (Mixer.outOfMemory)
-				break;
+			int offset0 = offset;
+			executor.execute(() ->
+			{
+				try
+				{
+					// Get length of superblock
+					int length = numBlocks * BLOCK_SIZE_INTS;
+
+					// Convert the key data to integers
+					int[] buffer = new int[length];
+					int j = offset0;
+					for (int i = 0; i < length; i++)
+						buffer[i] = (keyData[j++] & 0xFF)
+									| (keyData[j++] & 0xFF) << 8
+									| (keyData[j++] & 0xFF) << 16
+									| (keyData[j++] & 0xFF) << 24;
+
+					// Mix the key data
+					sMix(buffer, buffer, cost);
+
+					// Convert the mixed key data back to bytes
+					j = offset0;
+					for (int i = 0; i < length; i++)
+					{
+						int value = buffer[i];
+						keyData[j++] = (byte)value;
+						keyData[j++] = (byte)(value >>> 8);
+						keyData[j++] = (byte)(value >>> 16);
+						keyData[j++] = (byte)(value >>> 24);
+					}
+				}
+				catch (OutOfMemoryError e)
+				{
+					vars.outOfMemory = true;
+				}
+			});
 		}
 
 		// Wait for threads to terminate
@@ -804,13 +861,44 @@ public class Scrypt
 		}
 		catch (InterruptedException e)
 		{
-			throw new UnexpectedRuntimeException();
+			throw new UnexpectedRuntimeException(e);
 		}
-		if (Mixer.outOfMemory)
+
+		// Throw an exception if there was an 'out of memory' error when mixing key data
+		if (vars.outOfMemory)
 			throw new OutOfMemoryError();
 
-		// Return a key derived from the input key and processed key data
-		return pbkdf2HmacSha256(key, keyData, NUM_ITERATIONS, outKeyLength);
+		// Return a key derived from the input key and the processed key data
+		return pbkdf2HmacSha256(key, keyData, NUM_HMAC_ITERATIONS, outKeyLength);
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Creates and returns a new instance of {@link KeyGenerator} for deriving a key from the specified key and salt by
+	 * means of the scrypt key-derivation function with the specified KDF parameters.
+	 *
+	 * @param  key
+	 *           the key from which the key will be derived.
+	 * @param  salt
+	 *           the salt from which the key will be derived.
+	 * @param  params
+	 *           the parameters of the KDF that will derive the key.
+	 * @param  maxNumThreads
+	 *           the maximum number of threads that should be allocated for the processing of parallel superblocks in
+	 *           the KDF.
+	 * @param  outKeyLength
+	 *           the length (in bytes) of the derived key, which must be a positive integral multiple of 32.
+	 * @return a new instance of {@code KeyGenerator}.
+	 */
+
+	public KeyGenerator createKeyGenerator(byte[]        key,
+										   byte[]        salt,
+										   Scrypt.Params params,
+										   int           maxNumThreads,
+										   int           outKeyLength)
+	{
+		return new KeyGenerator(key, salt, params, maxNumThreads, outKeyLength);
 	}
 
 	//------------------------------------------------------------------
@@ -818,21 +906,23 @@ public class Scrypt
 	/**
 	 * Mixes the specified block of data at the intermediate level of the scrypt KDF.
 	 *
-	 * @param in   the data that will be mixed.
-	 * @param out  a buffer in which the mixed output data will be stored.
+	 * @param in
+	 *          the data that will be mixed.
+	 * @param out
+	 *          the buffer in which the mixed output data will be stored.
 	 */
 
-	protected static void blockMix(int[] in,
-								   int[] out)
+	protected void blockMix(int[] in,
+							int[] out)
 	{
-		final	int	BLOCK_LENGTH	= SALSA20_CORE_BLOCK_NUM_INTS;
+		final	int	BLOCK_LENGTH	= CORE_HASH_BLOCK_SIZE / Integer.BYTES;
 
 		// Copy the last block of input data to the X array
 		int length = in.length;
 		int[] x = new int[BLOCK_LENGTH];
 		System.arraycopy(in, in.length - BLOCK_LENGTH, x, 0, BLOCK_LENGTH);
 
-		// Hash the input data with the Salsa20 function
+		// Hash the input data with the core hash function
 		int[] y = new int[length];
 		int[] z = new int[BLOCK_LENGTH];
 		int j = 0;
@@ -841,7 +931,7 @@ public class Scrypt
 			for (int i = 0; i < BLOCK_LENGTH; i++)
 				z[i] = x[i] ^ in[j++];
 
-			Salsa20.hash(z, x, salsa20CoreNumRounds.value);
+			coreHashFunction.hash(z, x, coreHashNumRounds.value);
 
 			System.arraycopy(x, 0, y, offset, BLOCK_LENGTH);
 		}
@@ -867,14 +957,17 @@ public class Scrypt
 	/**
 	 * Mixes the specified superblock of data at the highest level of the scrypt KDF.
 	 *
-	 * @param in    the data that will be mixed.
-	 * @param out   a buffer in which the mixed output data will be stored.
-	 * @param cost  the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
+	 * @param in
+	 *          the data that will be mixed.
+	 * @param out
+	 *          a buffer in which the mixed output data will be stored.
+	 * @param cost
+	 *          the binary logarithm of the scrypt CPU/memory cost parameter, <i>N</i>.
 	 */
 
-	protected static void sMix(int[] in,
-							   int[] out,
-							   int   cost)
+	protected void sMix(int[] in,
+						int[] out,
+						int   cost)
 	{
 		// Copy the input data to the X array
 		int length = in.length;
@@ -896,9 +989,9 @@ public class Scrypt
 		int[] t = new int[length];
 		for (int i = 0; i < numIterations; i++)
 		{
-			int[] vv = v[x[length - (BLOCK_NUM_INTS / 2)] & mask];
+			int[] u = v[x[length - (BLOCK_SIZE_INTS / 2)] & mask];
 			for (int j = 0; j < length; j++)
-				t[j] = x[j] ^ vv[j];
+				t[j] = x[j] ^ u[j];
 
 			blockMix(t, x);
 		}
@@ -912,17 +1005,19 @@ public class Scrypt
 	/**
 	 * Returns the HMAC-SHA256 hash value for the specified key and data.
 	 * <p>
-	 * HMAC-SHA256 is a hash-based message authentication code whose underlying function is the SHA-256
-	 * cryptographic hash function.
+	 * HMAC-SHA256 is a hash-based message authentication code whose underlying function is the SHA-256 cryptographic
+	 * hash function.
 	 * </p>
 	 *
-	 * @param  key   the key for the HMAC.
-	 * @param  data  the data that will be hashed by the HMAC function.
+	 * @param  key
+	 *           the key for the HMAC.
+	 * @param  data
+	 *           the data that will be hashed by the HMAC function.
 	 * @return the HMAC-SHA256 hash value for the specified key and data.
 	 */
 
-	protected static byte[] hmacSha256(byte[] key,
-									   byte[] data)
+	protected byte[] hmacSha256(byte[] key,
+								byte[] data)
 	{
 		return new HmacSha256(key).getValue(data);
 	}
@@ -930,27 +1025,30 @@ public class Scrypt
 	//------------------------------------------------------------------
 
 	/**
-	 * Derives a key of a specified length from a specified key and salt using the PBKDF2 function whose
-	 * underlying hash function is HMAC-SHA256 (hash-based message authentication code using the SHA-256
-	 * cryptographic hash function), and returns the derived key.
+	 * Derives a key of the specified length from the specified key and salt using the PBKDF2 function whose underlying
+	 * hash function is HMAC-SHA256 (hash-based message authentication code using the SHA-256 cryptographic hash
+	 * function), and returns the derived key.
 	 * <p>
-	 * PBKDF2 is specified in <a href="http://tools.ietf.org/html/rfc2898">IETF RFC2898</a>.
+	 * PBKDF2 is specified in <a href="http://tools.ietf.org/html/rfc2898">IETF RFC 2898</a>.
 	 * </p>
 	 *
-	 * @param  key            the key from which the key will be derived.
-	 * @param  salt           the salt from which the key will be derived.
-	 * @param  numIterations  the number of iterations of the HMAC-SHA256 algorithm that will be applied.
-	 * @param  outKeyLength   the length (in bytes) of the derived key, which must be a positive integral
-	 *                        multiple of 32.
+	 * @param  key
+	 *           the key from which the key will be derived.
+	 * @param  salt
+	 *           the salt from which the key will be derived.
+	 * @param  numIterations
+	 *           the number of iterations of the HMAC-SHA256 algorithm that will be applied.
+	 * @param  outKeyLength
+	 *           the length (in bytes) of the derived key, which must be a positive integral multiple of 32.
 	 * @return a derived key of length {@code outKeyLength}.
 	 * @throws IllegalArgumentException
 	 *           if {@code outKeyLength} is not a positive integral multiple of 32.
 	 */
 
-	protected static byte[] pbkdf2HmacSha256(byte[] key,
-											 byte[] salt,
-											 int    numIterations,
-											 int    outKeyLength)
+	protected byte[] pbkdf2HmacSha256(byte[] key,
+									  byte[] salt,
+									  int    numIterations,
+									  int    outKeyLength)
 	{
 		final	int	INDEX_LENGTH	= 4;
 
@@ -994,12 +1092,6 @@ public class Scrypt
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class fields
-////////////////////////////////////////////////////////////////////////
-
-	private static	Salsa20NumRounds	salsa20CoreNumRounds	= Salsa20NumRounds.DEFAULT;
 
 }
 

@@ -48,12 +48,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import uk.blankaspect.common.collection.ArraySet;
+
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.misc.ArraySet;
-import uk.blankaspect.common.misc.StringUtils;
-
-import uk.blankaspect.common.regex.RegexUtils;
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 
@@ -69,9 +68,6 @@ public class XmlUtils
 ////////////////////////////////////////////////////////////////////////
 
 	private static final	String	XML_DECLARATION_PREFIX	= "<?xml";
-
-	private static final	String	PATH_SEPARATOR_REGEX	=
-													RegexUtils.escape(XmlConstants.PATH_SEPARATOR);
 
 	private interface AttrName
 	{
@@ -126,7 +122,7 @@ public class XmlUtils
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -220,7 +216,7 @@ public class XmlUtils
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int	lineNum;
@@ -258,19 +254,19 @@ public class XmlUtils
 		switch (ch)
 		{
 			case '<':
-				return XmlConstants.ENTITY_LT;
+				return XmlConstants.Entity.LT;
 
 			case '>':
-				return XmlConstants.ENTITY_GT;
+				return XmlConstants.Entity.GT;
 
 			case '\'':
-				return XmlConstants.ENTITY_APOS;
+				return XmlConstants.Entity.APOS;
 
 			case '"':
-				return XmlConstants.ENTITY_QUOT;
+				return XmlConstants.Entity.QUOT;
 
 			case '&':
-				return XmlConstants.ENTITY_AMP;
+				return XmlConstants.Entity.AMP;
 
 			default:
 				return Character.toString(ch);
@@ -588,22 +584,21 @@ public class XmlUtils
 	public static Element findElement(Element element,
 									  String  elementPath)
 	{
-		String[] pathComponents =
-						StringUtils.removeFromLast(elementPath, XmlConstants.ATTRIBUTE_PREFIX_CHAR).
-																		split(PATH_SEPARATOR_REGEX, -1);
+		List<String> pathComponents = StringUtils.split(StringUtils.getPrefixLast(elementPath,
+																				  XmlConstants.ATTRIBUTE_PREFIX_CHAR),
+														XmlConstants.PATH_SEPARATOR_CHAR);
 
 		Node node = element;
 		int pathIndex = 0;
-		while (pathIndex < pathComponents.length)
+		while (pathIndex < pathComponents.size())
 		{
-			String elementName = pathComponents[pathIndex];
+			String elementName = pathComponents.get(pathIndex);
 			NodeList nodes = node.getChildNodes();
 			int nodeIndex = 0;
 			while (nodeIndex < nodes.getLength())
 			{
 				node = nodes.item(nodeIndex);
-				if ((node.getNodeType() == Node.ELEMENT_NODE) &&
-					 node.getNodeName().equals(elementName))
+				if ((node.getNodeType() == Node.ELEMENT_NODE) && node.getNodeName().equals(elementName))
 					break;
 				++nodeIndex;
 			}
@@ -612,7 +607,7 @@ public class XmlUtils
 			++pathIndex;
 		}
 
-		return ((pathIndex < pathComponents.length) ? null : (Element)node);
+		return ((pathIndex < pathComponents.size()) ? null : (Element)node);
 	}
 
 	//------------------------------------------------------------------
@@ -677,7 +672,7 @@ public class XmlUtils
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	ErrorLogger	errorHandler;

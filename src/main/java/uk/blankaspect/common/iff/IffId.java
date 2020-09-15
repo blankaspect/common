@@ -1,6 +1,6 @@
 /*====================================================================*\
 
-Id.java
+IffId.java
 
 IFF identifier class.
 
@@ -21,9 +21,10 @@ package uk.blankaspect.common.iff;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 
-import uk.blankaspect.common.misc.NumberUtils;
+import java.nio.charset.StandardCharsets;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -43,9 +44,13 @@ public class IffId
 	public static final		int	MIN_CHAR	= '\u0020';
 	public static final		int	MAX_CHAR	= '\u007E';
 
-	private static final	String	ENCODING_NAME	= "US-ASCII";
-
 	private static final	byte[]	DEFAULT_VALUE	= { ' ', ' ', ' ', ' ' };
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	int	value;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -118,16 +123,7 @@ public class IffId
 	@Override
 	public String toString()
 	{
-		String str = null;
-		try
-		{
-			str = new String(getBytes(), ENCODING_NAME);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
-		return str;
+		return new String(getBytes(), StandardCharsets.US_ASCII);
 	}
 
 	//------------------------------------------------------------------
@@ -193,14 +189,7 @@ public class IffId
 
 	public void set(String str)
 	{
-		try
-		{
-			set(str.getBytes(ENCODING_NAME), 0);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			e.printStackTrace();
-		}
+		set(str.getBytes(StandardCharsets.US_ASCII), 0);
 	}
 
 	//------------------------------------------------------------------
@@ -235,12 +224,6 @@ public class IffId
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	int	value;
 
 }
 

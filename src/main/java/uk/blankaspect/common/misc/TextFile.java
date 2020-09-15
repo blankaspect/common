@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
@@ -39,6 +38,7 @@ import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -65,8 +65,6 @@ public class TextFile
 ////////////////////////////////////////////////////////////////////////
 //  Constants
 ////////////////////////////////////////////////////////////////////////
-
-	public static final		String	ENCODING_NAME_UTF8	= "UTF-8";
 
 	private static final	int	BLOCK_LENGTH	= 1 << 13;  // 8192
 
@@ -171,7 +169,7 @@ public class TextFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -237,7 +235,7 @@ public class TextFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	boolean			sync;
@@ -259,25 +257,24 @@ public class TextFile
 
 	public TextFile(File file)
 	{
-		this(file, Charset.defaultCharset().name());
+		this(file, Charset.defaultCharset());
 	}
 
 	//------------------------------------------------------------------
 
 	/**
 	 * @throws IllegalArgumentException
-	 *           if {@code file} is {@code null} or {@code encodingName} is {@code null} or {@code
-	 *           encodingName} is empty.
+	 *           if {@code file} is {@code null} or {@code charEncoding} is {@code null}.
 	 */
 
-	public TextFile(File   file,
-					String encodingName)
+	public TextFile(File    file,
+					Charset charEncoding)
 	{
-		if ((file == null) || (encodingName == null) || encodingName.isEmpty())
+		if ((file == null) || (charEncoding == null))
 			throw new IllegalArgumentException();
 
 		this.file = file;
-		this.encodingName = encodingName;
+		this.charEncoding = charEncoding;
 		progressListeners = new ArrayList<>();
 	}
 
@@ -298,14 +295,14 @@ public class TextFile
 	 * @throws NullPointerException
 	 */
 
-	public TextFile(URI    uri,
-					String encodingName)
+	public TextFile(URI     uri,
+					Charset charEncoding)
 	{
 		if (uri == null)
 			throw new NullPointerException();
 
 		this.uri = uri;
-		this.encodingName = encodingName;
+		this.charEncoding = charEncoding;
 		progressListeners = new ArrayList<>();
 	}
 
@@ -331,20 +328,20 @@ public class TextFile
 
 	//------------------------------------------------------------------
 
-	public static StringBuilder read(File   file,
-									 String encodingName)
+	public static StringBuilder read(File    file,
+									 Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(file, encodingName).read();
+		return new TextFile(file, charEncoding).read();
 	}
 
 	//------------------------------------------------------------------
 
-	public static StringBuilder read(URI    uri,
-									 String encodingName)
+	public static StringBuilder read(URI     uri,
+									 Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(uri, encodingName).read();
+		return new TextFile(uri, charEncoding).read();
 	}
 
 	//------------------------------------------------------------------
@@ -365,20 +362,20 @@ public class TextFile
 
 	//------------------------------------------------------------------
 
-	public static StringBuffer readSync(File   file,
-										String encodingName)
+	public static StringBuffer readSync(File    file,
+										Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(file, encodingName).readSync();
+		return new TextFile(file, charEncoding).readSync();
 	}
 
 	//------------------------------------------------------------------
 
-	public static StringBuffer readSync(URI    uri,
-										String encodingName)
+	public static StringBuffer readSync(URI     uri,
+										Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(uri, encodingName).readSync();
+		return new TextFile(uri, charEncoding).readSync();
 	}
 
 	//------------------------------------------------------------------
@@ -399,20 +396,20 @@ public class TextFile
 
 	//------------------------------------------------------------------
 
-	public static List<String> readLines(File   file,
-										 String encodingName)
+	public static List<String> readLines(File    file,
+										 Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(file, encodingName).readLines();
+		return new TextFile(file, charEncoding).readLines();
 	}
 
 	//------------------------------------------------------------------
 
-	public static List<String> readLines(URI    uri,
-										 String encodingName)
+	public static List<String> readLines(URI     uri,
+										 Charset charEncoding)
 		throws AppException
 	{
-		return new TextFile(uri, encodingName).readLines();
+		return new TextFile(uri, charEncoding).readLines();
 	}
 
 	//------------------------------------------------------------------
@@ -435,22 +432,22 @@ public class TextFile
 
 	//------------------------------------------------------------------
 
-	public static List<String> readLines(File   file,
-										 String encodingName,
-										 int    maxNumLines)
+	public static List<String> readLines(File    file,
+										 Charset charEncoding,
+										 int     maxNumLines)
 		throws AppException
 	{
-		return new TextFile(file, encodingName).readLines(maxNumLines);
+		return new TextFile(file, charEncoding).readLines(maxNumLines);
 	}
 
 	//------------------------------------------------------------------
 
-	public static List<String> readLines(URI    uri,
-										 String encodingName,
-										 int    maxNumLines)
+	public static List<String> readLines(URI     uri,
+										 Charset charEncoding,
+										 int     maxNumLines)
 		throws AppException
 	{
-		return new TextFile(uri, encodingName).readLines(maxNumLines);
+		return new TextFile(uri, charEncoding).readLines(maxNumLines);
 	}
 
 	//------------------------------------------------------------------
@@ -465,11 +462,11 @@ public class TextFile
 	//------------------------------------------------------------------
 
 	public static void write(File         file,
-							 String       encodingName,
+							 Charset      charEncoding,
 							 CharSequence text)
 		throws AppException
 	{
-		new TextFile(file, encodingName).write(text, FileWritingMode.DIRECT);
+		new TextFile(file, charEncoding).write(text, FileWritingMode.DIRECT);
 	}
 
 	//------------------------------------------------------------------
@@ -485,12 +482,12 @@ public class TextFile
 	//------------------------------------------------------------------
 
 	public static void write(File            file,
-							 String          encodingName,
+							 Charset         charEncoding,
 							 CharSequence    text,
 							 FileWritingMode writeMode)
 		throws AppException
 	{
-		new TextFile(file, encodingName).write(text, writeMode);
+		new TextFile(file, charEncoding).write(text, writeMode);
 	}
 
 	//------------------------------------------------------------------
@@ -672,7 +669,7 @@ public class TextFile
 	public List<String> readLines()
 		throws AppException
 	{
-		return (isFile() ? readLinesFile(false, 0) : readLinesUri(false, 0));
+		return isFile() ? readLinesFile(false, 0) : readLinesUri(false, 0);
 	}
 
 	//------------------------------------------------------------------
@@ -680,7 +677,7 @@ public class TextFile
 	public List<String> readLines(int maxNumLines)
 		throws AppException
 	{
-		return (isFile() ? readLinesFile(false, maxNumLines) : readLinesUri(false, maxNumLines));
+		return isFile() ? readLinesFile(false, maxNumLines) : readLinesUri(false, maxNumLines);
 	}
 
 	//------------------------------------------------------------------
@@ -770,7 +767,7 @@ public class TextFile
 			// Read file and return buffer
 			try
 			{
-				return read(inStream, encodingName, fileLength, compressed, sync);
+				return read(inStream, charEncoding, fileLength, compressed, sync);
 			}
 			catch (AppException e)
 			{
@@ -820,8 +817,7 @@ public class TextFile
 			// Read file from connection and return buffer
 			try
 			{
-				return read(inStream, getCharacterEncoding(connection), connection.getContentLength(),
-							compressed, sync);
+				return read(inStream, getCharEncoding(connection), connection.getContentLength(), compressed, sync);
 			}
 			catch (AppException e)
 			{
@@ -885,7 +881,7 @@ public class TextFile
 			// Read file and return lines
 			try
 			{
-				return readLines(inStream, encodingName, compressed, maxNumLines);
+				return readLines(inStream, charEncoding, compressed, maxNumLines);
 			}
 			catch (AppException e)
 			{
@@ -935,7 +931,7 @@ public class TextFile
 			// Read file from connection and return buffer
 			try
 			{
-				return readLines(inStream, getCharacterEncoding(connection), compressed, maxNumLines);
+				return readLines(inStream, getCharEncoding(connection), compressed, maxNumLines);
 			}
 			catch (AppException e)
 			{
@@ -1029,15 +1025,11 @@ public class TextFile
 				FileOutputStream outStream1 = new FileOutputStream(file);
 				fileChannel = outStream1.getChannel();
 				OutputStream outStream2 = compressed ? new GZIPOutputStream(outStream1) : outStream1;
-				outStream = new OutputStreamWriter(outStream2, encodingName);
+				outStream = new OutputStreamWriter(outStream2, charEncoding);
 			}
 			catch (SecurityException e)
 			{
 				throw new FileException(ErrorId.FILE_ACCESS_NOT_PERMITTED, file, e);
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new AppException(ErrorId.UNSUPPORTED_ENCODING, encodingName);
 			}
 			catch (IOException e)
 			{
@@ -1132,15 +1124,11 @@ public class TextFile
 				FileOutputStream outStream1 = new FileOutputStream(tempFile);
 				fileChannel = outStream1.getChannel();
 				OutputStream outStream2 = compressed ? new GZIPOutputStream(outStream1) : outStream1;
-				outStream = new OutputStreamWriter(outStream2, encodingName);
+				outStream = new OutputStreamWriter(outStream2, charEncoding);
 			}
 			catch (SecurityException e)
 			{
 				throw new FileException(ErrorId.FILE_ACCESS_NOT_PERMITTED, tempFile, e);
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new AppException(ErrorId.UNSUPPORTED_ENCODING, encodingName);
 			}
 			catch (IOException e)
 			{
@@ -1290,22 +1278,21 @@ public class TextFile
 
 	//------------------------------------------------------------------
 
-	private String getCharacterEncoding(URLConnection connection)
+	private Charset getCharEncoding(URLConnection connection)
 	{
-		String name = encodingName;
-		if (name == null)
+		Charset charEncoding = this.charEncoding;
+		if (charEncoding == null)
 		{
-			name = connection.getContentEncoding();
-			if (!Charset.isSupported(name))
-				name = ENCODING_NAME_UTF8;
+			String encodingName = connection.getContentEncoding();
+			charEncoding = Charset.isSupported(encodingName) ? Charset.forName(encodingName) : StandardCharsets.UTF_8;
 		}
-		return name;
+		return charEncoding;
 	}
 
 	//------------------------------------------------------------------
 
 	private Object read(InputStream inStream,
-						String      encodingName,
+						Charset     charEncoding,
 						int         length,
 						boolean     compressed,
 						boolean     sync)
@@ -1318,12 +1305,7 @@ public class TextFile
 			// Open reader on input stream
 			try
 			{
-				reader = new InputStreamReader(compressed ? new GZIPInputStream(inStream) : inStream,
-											   encodingName);
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new AppException(ErrorId.UNSUPPORTED_ENCODING, encodingName);
+				reader = new InputStreamReader(compressed ? new GZIPInputStream(inStream) : inStream, charEncoding);
 			}
 			catch (IOException e)
 			{
@@ -1357,8 +1339,7 @@ public class TextFile
 						buffer.append(readBuf, readLength);
 
 						// Notify monitors of progress
-						double progress = (length < 0) ? -1.0
-													   : (double)buffer.getLength() / (double)length;
+						double progress = (length < 0) ? -1.0 : (double)buffer.getLength() / (double)length;
 						for (IProgressListener listener : progressListeners)
 							listener.setProgress(progress);
 					}
@@ -1371,7 +1352,6 @@ public class TextFile
 				{
 					throw new AppException(ErrorId.ERROR_READING_FILE, e);
 				}
-
 			}
 			catch (OutOfMemoryError e)
 			{
@@ -1413,7 +1393,7 @@ public class TextFile
 	//------------------------------------------------------------------
 
 	private List<String> readLines(InputStream inStream,
-								   String      encodingName,
+								   Charset     charEncoding,
 								   boolean     compressed,
 								   int         maxNumLines)
 		throws AppException
@@ -1425,14 +1405,8 @@ public class TextFile
 			// Open reader on input stream
 			try
 			{
-				reader = new BufferedReader(new InputStreamReader(compressed
-																		? new GZIPInputStream(inStream)
-																		: inStream,
-																  encodingName));
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new AppException(ErrorId.UNSUPPORTED_ENCODING, encodingName);
+				reader = new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(inStream) : inStream,
+																  charEncoding));
 			}
 			catch (IOException e)
 			{
@@ -1460,8 +1434,7 @@ public class TextFile
 						lines.add(line);
 
 						// Notify monitors of progress
-						double progress = (maxNumLines == 0) ? -1.0
-															 : (double)lines.size() / (double)maxNumLines;
+						double progress = (maxNumLines == 0) ? -1.0 : (double)lines.size() / (double)maxNumLines;
 						for (IProgressListener listener : progressListeners)
 							listener.setProgress(progress);
 					}
@@ -1543,12 +1516,12 @@ public class TextFile
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	URI						uri;
 	private	File					file;
-	private	String					encodingName;
+	private	Charset					charEncoding;
 	private	List<IProgressListener>	progressListeners;
 
 }

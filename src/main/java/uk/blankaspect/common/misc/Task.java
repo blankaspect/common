@@ -24,7 +24,7 @@ import java.util.List;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
-import uk.blankaspect.common.gui.IProgressView;
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ public abstract class Task
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	AppException	exception;
@@ -208,7 +208,7 @@ public abstract class Task
 	private static	List<Thread>	threads		= new ArrayList<>();
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean	primary;

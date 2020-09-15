@@ -29,11 +29,11 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
-import uk.blankaspect.common.gui.IProgressView;
-
 import uk.blankaspect.common.misc.IProgressListener;
 import uk.blankaspect.common.misc.NullOutputStream;
 import uk.blankaspect.common.misc.Task;
+
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ public class FileEncrypter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -792,7 +792,7 @@ public class FileEncrypter
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	FortunaCipher				cipher;

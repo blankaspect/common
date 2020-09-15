@@ -2,7 +2,7 @@
 
 IffException.java
 
-IFF exception class.
+Class: IFF exception.
 
 \*====================================================================*/
 
@@ -26,7 +26,7 @@ import uk.blankaspect.common.exception.ExceptionUtils;
 //----------------------------------------------------------------------
 
 
-// IFF EXCEPTION CLASS
+// CLASS: IFF EXCEPTION
 
 
 public class IffException
@@ -40,6 +40,13 @@ public class IffException
 	private static final	int	MAX_PATHNAME_LENGTH	= 160;
 
 	private static final	String	CHUNK_ID_STR	= "Chunk ID";
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	File	file;
+	private	IffId	chunkId;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -74,17 +81,10 @@ public class IffException
 	@Override
 	protected String getPrefix()
 	{
-		return (getPathname(file) + "\n" + CHUNK_ID_STR + ": \"" + chunkId + "\"\n");
+		return (getPathname(file) + "\n" + CHUNK_ID_STR + ": '" + chunkId + "'");
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	File	file;
-	private	IffId	chunkId;
 
 }
 

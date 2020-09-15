@@ -78,7 +78,7 @@ public class ByteBlockInputStream
 			if ((length < 0) || (length > data.length - offset))
 				throw new IllegalArgumentException();
 
-			// Initialise instance fields
+			// Initialise instance variables
 			this.data = data;
 			this.offset = offset;
 			this.length = length;
@@ -98,7 +98,7 @@ public class ByteBlockInputStream
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		public	byte[]	data;
@@ -301,7 +301,7 @@ public class ByteBlockInputStream
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<Block>	blocks;

@@ -23,10 +23,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import java.net.URI;
 import java.net.URL;
+
+import java.nio.charset.StandardCharsets;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,7 +35,6 @@ import org.w3c.dom.Element;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TempFileException;
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 import uk.blankaspect.common.exception.UrlException;
 
 //----------------------------------------------------------------------
@@ -132,7 +132,7 @@ public class XmlFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -308,7 +308,7 @@ public class XmlFile
 			}
 
 			// Set default file type in exception
-			e.setSubstitutionStrings(FILE_STR);
+			e.setReplacements(FILE_STR);
 
 			// Rethrow exception
 			throw e;
@@ -403,7 +403,7 @@ public class XmlFile
 			}
 
 			// Set default file type in exception
-			e.setSubstitutionStrings(FILE_STR);
+			e.setReplacements(FILE_STR);
 
 			// Rethrow exception
 			throw e;
@@ -462,7 +462,7 @@ public class XmlFile
 			// Open XML writer on temporary file
 			try
 			{
-				writer = new XmlWriter(tempFile, XmlConstants.ENCODING_NAME_UTF8);
+				writer = new XmlWriter(tempFile, StandardCharsets.UTF_8);
 			}
 			catch (FileNotFoundException e)
 			{
@@ -471,10 +471,6 @@ public class XmlFile
 			catch (SecurityException e)
 			{
 				throw new FileException(ErrorId.FILE_ACCESS_NOT_PERMITTED, tempFile, e);
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new UnexpectedRuntimeException(e);
 			}
 
 			// Lock file
@@ -558,7 +554,7 @@ public class XmlFile
 			}
 
 			// Set default file type in exception
-			e.setSubstitutionStrings(FILE_STR);
+			e.setReplacements(FILE_STR);
 
 			// Rethrow exception
 			throw e;

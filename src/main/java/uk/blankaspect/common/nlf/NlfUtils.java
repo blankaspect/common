@@ -18,14 +18,11 @@ package uk.blankaspect.common.nlf;
 // IMPORTS
 
 
-import java.io.UnsupportedEncodingException;
-
 import java.nio.ByteBuffer;
 
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.UnsupportedCharsetException;
+import java.nio.charset.StandardCharsets;
 
 //----------------------------------------------------------------------
 
@@ -34,7 +31,7 @@ import java.nio.charset.UnsupportedCharsetException;
 
 
 /**
- * This class contains publicly accessible utility methods that are related to Nested-List Files.
+ * This class contains publicly accessible utility methods that relate to Nested-List Files.
  *
  * @since 1.0
  */
@@ -116,14 +113,9 @@ public class NlfUtils
 	{
 		try
 		{
-			CharsetDecoder decoder = Charset.forName(Constants.ENCODING_NAME_UTF8).newDecoder().
-														onMalformedInput(CodingErrorAction.REPORT).
-														onUnmappableCharacter(CodingErrorAction.REPORT);
+			CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+																	.onUnmappableCharacter(CodingErrorAction.REPORT);
 			return decoder.decode(ByteBuffer.wrap(data, offset, length)).toString();
-		}
-		catch (UnsupportedCharsetException e)
-		{
-			throw new NlfUncheckedException(ExceptionId.UTF8_ENCODING_NOT_SUPPORTED);
 		}
 		catch (Exception e)
 		{
@@ -146,16 +138,8 @@ public class NlfUtils
 	 */
 
 	public static byte[] stringToUtf8(String str)
-		throws NlfUncheckedException
 	{
-		try
-		{
-			return str.getBytes(Constants.ENCODING_NAME_UTF8);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new NlfUncheckedException(ExceptionId.UTF8_ENCODING_NOT_SUPPORTED);
-		}
+		return str.getBytes(StandardCharsets.UTF_8);
 	}
 
 	//------------------------------------------------------------------

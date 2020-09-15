@@ -64,17 +64,23 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.ColourSampleIcon;
-import uk.blankaspect.common.gui.FMenu;
-import uk.blankaspect.common.gui.FMenuItem;
-import uk.blankaspect.common.gui.FRadioButtonMenuItem;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.range.DoubleRange;
 
-import uk.blankaspect.common.misc.DoubleRange;
-import uk.blankaspect.common.misc.KeyAction;
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.icon.ColourSampleIcon;
+
+import uk.blankaspect.common.swing.menu.FMenu;
+import uk.blankaspect.common.swing.menu.FMenuItem;
+import uk.blankaspect.common.swing.menu.FRadioButtonMenuItem;
+
+import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -350,7 +356,7 @@ public class EnvelopeView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	text;
@@ -380,7 +386,7 @@ public class EnvelopeView
 		public Corner(Font    font,
 					  boolean upper)
 		{
-			// Initialise instance fields
+			// Initialise instance variables
 			this.upper = upper;
 
 			// Set attributes
@@ -420,7 +426,7 @@ public class EnvelopeView
 						  : verticalDivOffset + (verticalScaleMarkings.length - 1) * verticalDivHeight -
 																			(plotHeight + BOTTOM_MARGIN);
 			FontMetrics fontMetrics = gr.getFontMetrics();
-			y += GuiUtils.getBaselineOffset(0, fontMetrics);
+			y += FontUtils.getBaselineOffset(0, fontMetrics);
 
 			// Draw text
 			gr.setColor(getForeground());
@@ -430,7 +436,7 @@ public class EnvelopeView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	boolean	upper;
@@ -454,7 +460,7 @@ public class EnvelopeView
 		private XScale(int  height,
 					   Font font)
 		{
-			// Initialise instance fields
+			// Initialise instance variables
 			FontMetrics fontMetrics = getFontMetrics(font);
 			this.height = (height > 0)
 							? height
@@ -521,7 +527,7 @@ public class EnvelopeView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int	height;
@@ -545,7 +551,7 @@ public class EnvelopeView
 		private YScale(int  width,
 					   Font font)
 		{
-			// Initialise instance fields
+			// Initialise instance variables
 			if (width > 0)
 				this.width = width;
 			else
@@ -597,7 +603,7 @@ public class EnvelopeView
 			// Draw scale markings
 			gr.setColor(getForeground());
 			FontMetrics fontMetrics = gr.getFontMetrics();
-			int fontYOffs = GuiUtils.getBaselineOffset(0, fontMetrics);
+			int fontYOffs = FontUtils.getBaselineOffset(0, fontMetrics);
 			int y = TOP_MARGIN + verticalDivOffset;
 			for (int i = 0; i < verticalScaleMarkings.length; i++)
 			{
@@ -613,7 +619,7 @@ public class EnvelopeView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int	width;
@@ -674,7 +680,7 @@ public class EnvelopeView
 						String[] verticalScaleMarkings,
 						Font     font)
 	{
-		// Initialise instance fields
+		// Initialise instance variables
 		this.plotWidth = plotWidth;
 		this.plotHeight = plotHeight;
 		this.viewableWidth = viewableWidth;
@@ -2256,8 +2262,7 @@ public class EnvelopeView
 	private void onScrollLeftUnit()
 	{
 		if (viewport != null)
-			incrementViewX(-getScrollableUnitIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL,
-													   -1));
+			incrementViewX(-getScrollableUnitIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL, -1));
 	}
 
 	//------------------------------------------------------------------
@@ -2265,8 +2270,7 @@ public class EnvelopeView
 	private void onScrollRightUnit()
 	{
 		if (viewport != null)
-			incrementViewX(getScrollableUnitIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL,
-													  1));
+			incrementViewX(getScrollableUnitIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL, 1));
 	}
 
 	//------------------------------------------------------------------
@@ -2274,8 +2278,7 @@ public class EnvelopeView
 	private void onScrollLeftBlock()
 	{
 		if (viewport != null)
-			incrementViewX(-getScrollableBlockIncrement(viewport.getViewRect(),
-														SwingConstants.HORIZONTAL, -1));
+			incrementViewX(-getScrollableBlockIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL, -1));
 	}
 
 	//------------------------------------------------------------------
@@ -2283,8 +2286,7 @@ public class EnvelopeView
 	private void onScrollRightBlock()
 	{
 		if (viewport != null)
-			incrementViewX(getScrollableBlockIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL,
-													   1));
+			incrementViewX(getScrollableBlockIncrement(viewport.getViewRect(), SwingConstants.HORIZONTAL, 1));
 	}
 
 	//------------------------------------------------------------------
@@ -2391,7 +2393,7 @@ public class EnvelopeView
 		if (selectedNodeId != null)
 		{
 			Envelope.NodeId id = selectedNodeId.clone();
-			if (id.nodeIndex < getEnvelope(id.envelopeIndex).getNumNodes() - 1 )
+			if (id.nodeIndex < getEnvelope(id.envelopeIndex).getNumNodes() - 1)
 			{
 				++id.nodeIndex;
 				setSelectedNodeId(id);
@@ -2481,13 +2483,13 @@ public class EnvelopeView
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	JPopupMenu	contextMenu;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	int						plotWidth;

@@ -87,7 +87,7 @@ public abstract class FormFile
 		("Failed to rename the temporary file to the specified filename."),
 
 		INCORRECT_FORMAT
-		("The file is not a valid %1 file."),
+		("The file is not a valid '%1' file."),
 
 		MALFORMED_FILE
 		("The file is malformed."),
@@ -118,7 +118,7 @@ public abstract class FormFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -232,7 +232,7 @@ public abstract class FormFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		public	IffId		groupTypeId;
@@ -291,7 +291,7 @@ public abstract class FormFile
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	IdList	idList;
@@ -299,6 +299,13 @@ public abstract class FormFile
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	IffId	groupId;
+	private	File	file;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -694,13 +701,6 @@ public abstract class FormFile
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	IffId	groupId;
-	private	File	file;
 
 }
 

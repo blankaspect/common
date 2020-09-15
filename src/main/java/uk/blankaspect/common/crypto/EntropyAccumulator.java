@@ -35,7 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.blankaspect.common.misc.IStringKeyed;
-import uk.blankaspect.common.misc.StringUtils;
+
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 
@@ -215,7 +216,7 @@ public class EntropyAccumulator
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	key;
@@ -317,7 +318,7 @@ public class EntropyAccumulator
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int	bitMask;
@@ -371,7 +372,7 @@ public class EntropyAccumulator
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		/** The bit mask that applies to both metrics. */
@@ -423,7 +424,7 @@ public class EntropyAccumulator
 			//----------------------------------------------------------
 
 		////////////////////////////////////////////////////////////////
-		//  Instance fields
+		//  Instance variables
 		////////////////////////////////////////////////////////////////
 
 			private	int		index;
@@ -475,7 +476,7 @@ public class EntropyAccumulator
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int			bitMask;
@@ -578,7 +579,7 @@ public class EntropyAccumulator
 		if ((timerDivisor < MIN_TIMER_DIVISOR) || (timerDivisor > MAX_TIMER_DIVISOR))
 			throw new IllegalArgumentException();
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.timerDivisor = timerDivisor;
 		lock = new Object();
 		entropyConsumers = new ArrayList<>();
@@ -968,7 +969,7 @@ public class EntropyAccumulator
 			boolean metricsEnabled = (metrics != null);
 			setMetricsEnabled(false);
 
-			// Set instance field
+			// Set instance variable
 			this.timerDivisor = timerDivisor;
 
 			// Enable metrics
@@ -1022,7 +1023,7 @@ public class EntropyAccumulator
 
 	private long getHighResolutionTime()
 	{
-		return (System.nanoTime() / timerDivisor);
+		return System.nanoTime() / timerDivisor;
 	}
 
 	//------------------------------------------------------------------
@@ -1056,7 +1057,7 @@ public class EntropyAccumulator
 		boolean metricsEnabled = (metrics != null);
 		setMetricsEnabled(false);
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.sourceParams = new EnumMap<>(sourceParams);
 		lastEventTime = new EnumMap<>(SourceKind.class);
 		for (SourceKind sourceKind : sourceParams.keySet())
@@ -1220,7 +1221,7 @@ public class EntropyAccumulator
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	Map<SourceKind, SourceParams>	sourceParams;

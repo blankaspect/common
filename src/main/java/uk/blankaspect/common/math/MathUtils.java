@@ -2,7 +2,7 @@
 
 MathUtils.java
 
-Class: mathematics utility methods.
+Class: mathematics-related utility methods.
 
 \*====================================================================*/
 
@@ -15,15 +15,21 @@ package uk.blankaspect.common.math;
 //----------------------------------------------------------------------
 
 
-// CLASS: MATHEMATICS UTILITY METHODS
+// CLASS: MATHEMATICS-RELATED UTILITY METHODS
 
 
 /**
- * This class contains utility methods that are related to mathematics.
+ * This class contains utility methods that relate to mathematics.
  */
 
 public class MathUtils
 {
+
+////////////////////////////////////////////////////////////////////////
+//  Constants
+////////////////////////////////////////////////////////////////////////
+
+	private static final	String	NEGATIVE_VALUE_STR	= "Negative value";
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -47,25 +53,33 @@ public class MathUtils
 	 * Returns the greatest common divisor of two non-negative integers.  The GCD is computed with the Euclidean
 	 * algorithm.
 	 *
-	 * @param  value1  the first value.
-	 * @param  value2  the second value.
-	 * @return the greatest common divisor of {@code value1} and {@code value2}.
+	 * @param  value1
+	 *           the first value.
+	 * @param  value2
+	 *           the second value.
+	 * @return the greatest common divisor of <i>value1</i> and <i>value2</i>.
 	 * @throws IllegalArgumentException
-	 *           if either {@code value1} or {@code value2} is negative.
+	 *           if either <i>value1</i> or <i>value2</i> is negative.
 	 */
 
 	public static int gcd(int value1,
 						  int value2)
 	{
-		if ((value1 < 0) || (value2 < 0))
-			throw new IllegalArgumentException("Negative value");
+		// Validate arguments
+		if (value1 < 0)
+			throw new IllegalArgumentException(NEGATIVE_VALUE_STR + ": " + value1);
+		if (value2 < 0)
+			throw new IllegalArgumentException(NEGATIVE_VALUE_STR + ": " + value2);
 
+		// Find greatest common divisor
 		while (value2 != 0)
 		{
 			int remainder = value1 % value2;
 			value1 = value2;
 			value2 = remainder;
 		}
+
+		// Return result
 		return value1;
 	}
 
@@ -75,15 +89,18 @@ public class MathUtils
 	 * Maps the specified input value to an output value using the specified lookup table and linear interpolation
 	 * between adjacent values in the table.  The domain of the lookup table is the closed interval [0, 1].
 	 *
-	 * @param  table  the lookup table of output values.
-	 * @param  x      the input value for which an output value is required.
-	 * @return an output value for {@code x} that is obtained by interpolating between the values of the entries in
-	 *         {@code table} that lie on either side of {@code x}.
+	 * @param  table
+	 *           the lookup table of output values.
+	 * @param  x
+	 *           the input value for which an output value is required.
+	 * @return an output value for <i>x</i> that is obtained by interpolating between the values of the entries in
+	 *         <i>table</i> that lie on either side of <i>x</i>.
 	 * @throws IllegalArgumentException
-	 *           if {@code x} is outside the interval [0, 1].
+	 *           if <i>x</i> is outside the interval [0, 1].
 	 */
 
-	public static double lookup(double[] table, double x)
+	public static double lookup(double[] table,
+								double   x)
 	{
 		// Validate arguments
 		if ((x < 0.0) || (x > 1.0))
@@ -109,17 +126,24 @@ public class MathUtils
 	 * between adjacent values in the table.  The domain of the lookup table is a closed interval with the specified
 	 * endpoints.
 	 *
-	 * @param  table  the lookup table of output values.
-	 * @param  minX   the lower endpoint of the interval of the domain of {@code table}.
-	 * @param  maxX   the upper endpoint of the interval of the domain of {@code table}.
-	 * @param  x      the input value for which an output value is required.
-	 * @return an output value for {@code x} that is obtained by interpolating between the values of the entries in
-	 *         {@code table} that lie on either side of {@code x}.
+	 * @param  table
+	 *           the lookup table of output values.
+	 * @param  minX
+	 *           the lower endpoint of the interval of the domain of <i>table</i>.
+	 * @param  maxX
+	 *           the upper endpoint of the interval of the domain of <i>table</i>.
+	 * @param  x
+	 *           the input value for which an output value is required.
+	 * @return an output value for <i>x</i> that is obtained by interpolating between the values of the entries in
+	 *         <i>table</i> that lie on either side of <i>x</i>.
 	 * @throws IllegalArgumentException
-	 *           if {@code x} is outside the interval [0, 1].
+	 *           if <i>x</i> is outside the interval [0, 1].
 	 */
 
-	public static double lookup(double[] table, double minX, double maxX, double x)
+	public static double lookup(double[] table,
+								double   minX,
+								double   maxX,
+								double   x)
 	{
 		// Validate arguments
 		if ((x < minX) || (x > maxX))

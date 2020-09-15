@@ -49,7 +49,7 @@ public class NlfUncheckedException
 		// Call superclass constructor
 		super(id.getMessage());
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 	}
 
@@ -70,7 +70,7 @@ public class NlfUncheckedException
 		// Call superclass constructor
 		super(id.getMessage(), cause);
 
-		// Initalise instance fields
+		// Initialise instance variables
 		this.id = id;
 	}
 
@@ -95,7 +95,7 @@ public class NlfUncheckedException
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	ExceptionId	id;

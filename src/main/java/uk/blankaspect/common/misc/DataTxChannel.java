@@ -25,16 +25,25 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 
+import java.math.BigInteger;
+
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
-import java.util.function.Consumer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
+import uk.blankaspect.common.function.IProcedure1;
+
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.thread.DaemonFactory;
 
 //----------------------------------------------------------------------
 
@@ -56,8 +65,6 @@ public class DataTxChannel
 
 	private static final	String	HOST	= "localhost";
 
-	private static final	String	ENCODING_NAME_UTF8	= "UTF-8";
-
 	private static final	char	END_OF_MESSAGE	= '\u0003';
 
 	private static final	int	NUM_MESSAGE_PARTS	= 5;
@@ -66,6 +73,8 @@ public class DataTxChannel
 
 	private static final	String	CHANNEL_ID	= "\u03C6chan";
 
+	private static final	BigInteger	ID_MASK;
+
 	private static final	String	RECEIVER_THREAD_NAME	= DataTxChannel.class.getSimpleName() + "-receiver";
 	private static final	String	CONNECTION_THREAD_NAME	= DataTxChannel.class.getSimpleName() + "-connection-port";
 
@@ -73,6 +82,10 @@ public class DataTxChannel
 	private static final	int	CONNECTION_ACCEPT_TIMEOUT	= 100;
 	private static final	int	LISTENER_TIMEOUT			= 500;
 	private static final	int	RESPONSE_TIMEOUT			= 400;
+
+	private static final	String	UNEXPECTED_RESPONSE_STR	= "Unexpected response";
+	private static final	String	INVALID_RESPONSE_STR	= "Invalid response";
+	private static final	String	TIMED_OUT_STR			= "Timed out waiting for response";
 
 	private interface MessageId
 	{
@@ -101,6 +114,15 @@ public class DataTxChannel
 
 	private static class MessageContent
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	sourceId;
+		private	String	targetId;
+		private	String	messageId;
+		private	String	data;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -146,18 +168,27 @@ public class DataTxChannel
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	sourceId;
-		private	String	targetId;
-		private	String	messageId;
-		private	String	data;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String			id;
+	private	ServerSocket	serverSocket;
+
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
+	{
+		byte[] magnitude = new byte[8];
+		Arrays.fill(magnitude, (byte)0xFF);
+		ID_MASK = new BigInteger(1, magnitude);
+	}
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -165,7 +196,7 @@ public class DataTxChannel
 
 	public DataTxChannel(String id)
 	{
-		// Initialise instance fields
+		// Initialise instance variables
 		this.id = id;
 	}
 
@@ -177,14 +208,11 @@ public class DataTxChannel
 
 	public static String getIdSuffix()
 	{
-		GregorianCalendar calendar = new GregorianCalendar();
-		long time1 = calendar.getTimeInMillis();
-		long time2 = System.nanoTime();
-		long value = time1 ^ Long.reverse(time1) ^ time2 ^ Long.rotateLeft(time2, 24)
-															^ ((new Object().hashCode() & 0xFFFFFFFFL) << 16)
-															^ System.identityHashCode(calendar);
-		String str = Long.toUnsignedString(value, 36);
-		return str.substring(str.length() - 8);
+		UUID uid = UUID.randomUUID();
+		BigInteger u64 = BigInteger.valueOf(uid.getMostSignificantBits()).and(ID_MASK);
+		BigInteger l64 = BigInteger.valueOf(uid.getLeastSignificantBits()).and(ID_MASK);
+		BigInteger id128 = u64.shiftLeft(64).or(l64);
+		return StringUtils.padBefore(id128.toString(36), 25, '0');
 	}
 
 	//------------------------------------------------------------------
@@ -286,7 +314,7 @@ public class DataTxChannel
 
 	//------------------------------------------------------------------
 
-	public void listen(Consumer<String> dataHandler)
+	public void listen(IProcedure1<String> dataHandler)
 	{
 		// Test for open server socket
 		if (serverSocket == null)
@@ -323,11 +351,11 @@ public class DataTxChannel
 						try
 						{
 							// Get input stream of socket
-							inStream = new InputStreamReader(socket.getInputStream(), ENCODING_NAME_UTF8);
+							inStream = new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8);
 
 							// Get output stream of socket
 							outStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),
-																				  ENCODING_NAME_UTF8));
+																				  StandardCharsets.UTF_8));
 
 							// Read from input stream
 							StringBuilder buffer = new StringBuilder(1024);
@@ -457,7 +485,7 @@ public class DataTxChannel
 												writeAck(outStream, content);
 
 												// Handle data
-												dataHandler.accept(buffer.toString());
+												dataHandler.invoke(buffer.toString());
 
 												// Disconnect
 												state = ListenerState.STOP;
@@ -522,13 +550,13 @@ public class DataTxChannel
 					};
 
 					// Create and start connector thread
-					DaemonThread.create(connector, CONNECTION_THREAD_NAME + serverSocket.getLocalPort()).start();
+					DaemonFactory.create(CONNECTION_THREAD_NAME + serverSocket.getLocalPort(), connector).start();
 				}
 			}
 		};
 
 		// Create and start receiver thread
-		DaemonThread.create(receiver, RECEIVER_THREAD_NAME).start();
+		DaemonFactory.create(RECEIVER_THREAD_NAME, receiver).start();
 	}
 
 	//------------------------------------------------------------------
@@ -563,12 +591,13 @@ public class DataTxChannel
 			try
 			{
 				// Get input stream of socket
-				inStream = new InputStreamReader(socket.getInputStream(), ENCODING_NAME_UTF8);
+				inStream = new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8);
 
 				// Get output stream of socket
-				outStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), ENCODING_NAME_UTF8));
+				outStream = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),
+																	  StandardCharsets.UTF_8));
 
-				// Send "start" message
+				// Send 'start' message
 				writeMessage(outStream, targetId, MessageId.START, Integer.toString(data.size()));
 
 				// Read response
@@ -589,13 +618,13 @@ public class DataTxChannel
 
 						// Test for acknowledgement
 						if (!response.matches(targetId, id, MessageId.ACK, messageId))
-							throw new IOException("Unexpected response");
+							throw new IOException(UNEXPECTED_RESPONSE_STR);
 					}
 
 					// Indicate success
 					success = true;
 
-					// Send "end" message; don't wait for response
+					// Send 'end' message; don't wait for response
 					writeMessage(outStream, targetId, MessageId.END, null);
 				}
 			}
@@ -651,12 +680,12 @@ public class DataTxChannel
 		// Read message
 		String message = read(reader, RESPONSE_TIMEOUT);
 		if (message == null)
-			throw new IOException("Timed out waiting for response");
+			throw new IOException(TIMED_OUT_STR);
 
 		// Get message content
 		MessageContent content = getMessageContent(message);
 		if (content == null)
-			throw new IOException("Invalid response");
+			throw new IOException(INVALID_RESPONSE_STR);
 
 		// Return message content
 		return content;
@@ -703,13 +732,6 @@ public class DataTxChannel
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	String			id;
-	private	ServerSocket	serverSocket;
 
 }
 

@@ -2,7 +2,7 @@
 
 PathnameFilter.java
 
-Pathname filter class.
+Class: pathname filter.
 
 \*====================================================================*/
 
@@ -24,15 +24,16 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import uk.blankaspect.common.exception.AppException;
 
+import uk.blankaspect.common.string.StringUtils;
+
 //----------------------------------------------------------------------
 
 
-// PATHNAME FILTER CLASS
+// CLASS: PATHNAME FILTER
 
 
 public class PathnameFilter
@@ -43,12 +44,12 @@ public class PathnameFilter
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final	char	SINGLE_WILDCARD_CHAR		= '?';
-	public static final	char	MULTIPLE_WILDCARD_CHAR		= '*';
+	public static final	char	NAME_SINGLE_WILDCARD_CHAR	= '?';
+	public static final	char	NAME_MULTIPLE_WILDCARD_CHAR	= '*';
 	public static final	String	PATH_MULTIPLE_WILDCARD_STR	= "**";
 
 	public static final	char	SEPARATOR_CHAR	= '/';
-	public static final	String	SEPARATOR_STR	= Character.toString(SEPARATOR_CHAR);
+	public static final	String	SEPARATOR		= Character.toString(SEPARATOR_CHAR);
 
 	public enum ErrorMode
 	{
@@ -62,7 +63,7 @@ public class PathnameFilter
 ////////////////////////////////////////////////////////////////////////
 
 
-	// ERROR IDENTIFIERS
+	// ENUMERATION: ERROR IDENTIFIERS
 
 
 	private enum ErrorId
@@ -83,6 +84,12 @@ public class PathnameFilter
 		("\"..\" is not allowed after a wildcard in a pathname-filter pattern.");
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -97,18 +104,13 @@ public class PathnameFilter
 	//  Instance methods : AppException.IId interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getMessage()
 		{
 			return message;
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
 
 	}
 
@@ -119,7 +121,7 @@ public class PathnameFilter
 ////////////////////////////////////////////////////////////////////////
 
 
-	// MULTIPLE FILTER CLASS
+	// CLASS: MULTIPLE FILTER
 
 
 	public static class MultipleFilter
@@ -131,6 +133,12 @@ public class PathnameFilter
 	////////////////////////////////////////////////////////////////////
 
 		private static final	char	SEPARATOR	= ';';
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	PathnameFilter[]	filters;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -387,18 +395,12 @@ public class PathnameFilter
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	PathnameFilter[]	filters;
-
 	}
 
 	//==================================================================
 
 
-	// PATTERN TOKEN CLASS
+	// CLASS: PATTERN TOKEN
 
 
 	private static class PatternToken
@@ -416,6 +418,15 @@ public class PathnameFilter
 			MULTIPLE_WILDCARD,
 			PATH_MULTIPLE_WILDCARD
 		}
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Kind				kind;
+		private	String				value;
+		private	String				comparisonValue;
+		private	List<PatternToken>	subtokens;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -445,14 +456,14 @@ public class PathnameFilter
 				{
 					switch (value.charAt(index))
 					{
-						case SINGLE_WILDCARD_CHAR:
+						case NAME_SINGLE_WILDCARD_CHAR:
 							if (index > startIndex)
 								subtokens.add(new PatternToken(value, startIndex, index, ignoreCase));
 							subtokens.add(new PatternToken(Kind.SINGLE_WILDCARD));
 							startIndex = ++index;
 							break;
 
-						case MULTIPLE_WILDCARD_CHAR:
+						case NAME_MULTIPLE_WILDCARD_CHAR:
 							if (index > startIndex)
 								subtokens.add(new PatternToken(value, startIndex, index, ignoreCase));
 							subtokens.add(new PatternToken(Kind.MULTIPLE_WILDCARD));
@@ -513,11 +524,11 @@ public class PathnameFilter
 				}
 
 				case SINGLE_WILDCARD:
-					str = Character.toString(SINGLE_WILDCARD_CHAR);
+					str = Character.toString(NAME_SINGLE_WILDCARD_CHAR);
 					break;
 
 				case MULTIPLE_WILDCARD:
-					str = Character.toString(MULTIPLE_WILDCARD_CHAR);
+					str = Character.toString(NAME_MULTIPLE_WILDCARD_CHAR);
 					break;
 
 				case PATH_MULTIPLE_WILDCARD:
@@ -581,61 +592,12 @@ public class PathnameFilter
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	Kind				kind;
-		private	String				value;
-		private	String				comparisonValue;
-		private	List<PatternToken>	subtokens;
-
 	}
 
 	//==================================================================
 
 
-	// PATTERN COMPARATOR CLASS
-
-
-	private static class PatternComparator
-		implements Comparator<PathnameFilter>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		public static final	PatternComparator	INSTANCE	= new PatternComparator();
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private PatternComparator()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Comparator interface
-	////////////////////////////////////////////////////////////////////
-
-		public int compare(PathnameFilter filter1,
-						   PathnameFilter filter2)
-		{
-			return (filter1.toString().compareTo(filter2.toString()));
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// FILE EXCEPTION CLASS
+	// CLASS: FILE EXCEPTION
 
 
 	private static class FileException
@@ -680,14 +642,27 @@ public class PathnameFilter
 	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
-//  Constructors
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-	public PathnameFilter()
-	{
-	}
+	private static	ErrorMode	errorMode;
+	private static	List<File>	errors		= new ArrayList<>();
 
-	//------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String				pattern;
+	private	String				basePathname;
+	private	List<PatternToken>	patternTokens;
+	private	List<PatternToken>	absolutePatternTokens;
+	private	boolean				hasWildcards;
+	private	boolean				hasPathWildcards;
+	private	boolean				ignoreCase;
+
+////////////////////////////////////////////////////////////////////////
+//  Constructors
+////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * @throws IllegalArgumentException
@@ -777,7 +752,7 @@ public class PathnameFilter
 
 		// Fix up pattern for directory
 		pattern = normalisePathname(pattern);
-		if (pattern.endsWith(SEPARATOR_STR))
+		if (pattern.endsWith(SEPARATOR))
 			pattern += PATH_MULTIPLE_WILDCARD_STR;
 		else
 		{
@@ -786,7 +761,7 @@ public class PathnameFilter
 				try
 				{
 					if (new File(pattern).isDirectory())
-						pattern += SEPARATOR_STR + PATH_MULTIPLE_WILDCARD_STR;
+						pattern += SEPARATOR + PATH_MULTIPLE_WILDCARD_STR;
 				}
 				catch (SecurityException e)
 				{
@@ -799,11 +774,11 @@ public class PathnameFilter
 		if (basePathname != null)
 		{
 			basePathname = normalisePathname(basePathname);
-			if (!basePathname.isEmpty() && !basePathname.endsWith(SEPARATOR_STR))
-				basePathname += SEPARATOR_STR;
+			if (!basePathname.isEmpty() && !basePathname.endsWith(SEPARATOR))
+				basePathname += SEPARATOR;
 		}
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.pattern = pattern;
 		this.basePathname = basePathname;
 		this.ignoreCase = ignoreCase;
@@ -830,6 +805,12 @@ public class PathnameFilter
 
 		// Initialise absolute pattern tokens
 		updateAbsolute();
+	}
+
+	//------------------------------------------------------------------
+
+	protected PathnameFilter()
+	{
 	}
 
 	//------------------------------------------------------------------
@@ -861,7 +842,7 @@ public class PathnameFilter
 
 	public static void sort(List<PathnameFilter> list)
 	{
-		Collections.sort(list, PatternComparator.INSTANCE);
+		list.sort((filter1, filter2) -> filter1.toString().compareTo(filter2.toString()));
 	}
 
 	//------------------------------------------------------------------
@@ -884,7 +865,7 @@ public class PathnameFilter
 											  String pattern)
 	{
 		String pathname = normalisePathname(new File(file, pattern).getPath());
-		return (normalisePathname(pattern).endsWith(SEPARATOR_STR) ? pathname + SEPARATOR_STR : pathname);
+		return (normalisePathname(pattern).endsWith(SEPARATOR) ? pathname + SEPARATOR : pathname);
 	}
 
 	//------------------------------------------------------------------
@@ -895,8 +876,8 @@ public class PathnameFilter
 		try
 		{
 			pathname = normalisePathname(pathname);
-			if (!pathname.endsWith(SEPARATOR_STR) && new File(pathname).isDirectory())
-				pathname += SEPARATOR_STR;
+			if (!pathname.endsWith(SEPARATOR) && new File(pathname).isDirectory())
+				pathname += SEPARATOR;
 			return pathname;
 		}
 		catch (SecurityException e)
@@ -907,9 +888,9 @@ public class PathnameFilter
 
 	//------------------------------------------------------------------
 
-	private static String[] splitPathname(String str)
+	private static List<String> splitPathname(String str)
 	{
-		return str.split(SEPARATOR_STR);
+		return StringUtils.split(str, SEPARATOR_CHAR);
 	}
 
 	//------------------------------------------------------------------
@@ -933,14 +914,14 @@ public class PathnameFilter
 
 	//------------------------------------------------------------------
 
-	private static String[] getPathnameComponents(File file)
+	private static List<String> getPathnameComponents(File file)
 	{
 		return splitPathname(toNormalisedPathname(file));
 	}
 
 	//------------------------------------------------------------------
 
-	private static String[] getAbsolutePathnameComponents(File file)
+	private static List<String> getAbsolutePathnameComponents(File file)
 		throws AppException
 	{
 		return splitPathname(toCanonicalPathname(file));
@@ -979,7 +960,7 @@ public class PathnameFilter
 
 	//------------------------------------------------------------------
 
-	private static boolean match(String[]           pathnameComponents,
+	private static boolean match(List<String>       pathnameComponents,
 								 int                pathnameComponentIndex,
 								 List<PatternToken> patternTokens,
 								 int                patternTokenIndex)
@@ -990,14 +971,14 @@ public class PathnameFilter
 			switch (token.kind)
 			{
 				case LITERAL:
-					if ((pathnameComponentIndex >= pathnameComponents.length)
-						|| (!token.comparisonValue.equals(pathnameComponents[pathnameComponentIndex++])))
+					if ((pathnameComponentIndex >= pathnameComponents.size())
+						|| (!token.comparisonValue.equals(pathnameComponents.get(pathnameComponentIndex++))))
 						return false;
 					break;
 
 				case PATTERN:
-					if ((pathnameComponentIndex >= pathnameComponents.length)
-						|| !token.match(pathnameComponents[pathnameComponentIndex++], 0, 0))
+					if ((pathnameComponentIndex >= pathnameComponents.size())
+						|| !token.match(pathnameComponents.get(pathnameComponentIndex++), 0, 0))
 						return false;
 					break;
 
@@ -1009,7 +990,7 @@ public class PathnameFilter
 						token = patternTokens.get(patternTokenIndex++);
 					}
 					--patternTokenIndex;
-					while (pathnameComponentIndex < pathnameComponents.length)
+					while (pathnameComponentIndex < pathnameComponents.size())
 					{
 						if (match(pathnameComponents, pathnameComponentIndex, patternTokens, patternTokenIndex))
 							return true;
@@ -1023,7 +1004,7 @@ public class PathnameFilter
 					break;
 			}
 		}
-		return (pathnameComponentIndex >= pathnameComponents.length);
+		return (pathnameComponentIndex >= pathnameComponents.size());
 	}
 
 	//------------------------------------------------------------------
@@ -1157,9 +1138,9 @@ public class PathnameFilter
 			throw new IllegalStateException();
 
 		return (isMatchAbsolute()
-						? absolutePatternTokens.size() - getAbsolutePathnameComponents(file).length
-						: getPathnameComponents(new File(basePathname)).length + patternTokens.size()
-																				- getPathnameComponents(file).length);
+						? absolutePatternTokens.size() - getAbsolutePathnameComponents(file).size()
+						: getPathnameComponents(new File(basePathname)).size() + patternTokens.size()
+																				- getPathnameComponents(file).size());
 	}
 
 	//------------------------------------------------------------------
@@ -1168,7 +1149,7 @@ public class PathnameFilter
 	{
 		try
 		{
-			String[] pathnameComponents = null;
+			List<String> pathnameComponents = null;
 			List<PatternToken> tokens = null;
 			if (isMatchAbsolute())
 			{
@@ -1185,8 +1166,8 @@ public class PathnameFilter
 			}
 			if (ignoreCase)
 			{
-				for (int i = 0; i < pathnameComponents.length; i++)
-					pathnameComponents[i] = pathnameComponents[i].toLowerCase();
+				for (int i = 0; i < pathnameComponents.size(); i++)
+					pathnameComponents.set(i, pathnameComponents.get(i).toLowerCase());
 			}
 			return match(pathnameComponents, 0, tokens, 0);
 		}
@@ -1220,9 +1201,9 @@ public class PathnameFilter
 			{
 				pathname = toCanonicalPathname(new File(paths[0]));
 				if (!paths[1].isEmpty())
-					pathname += (paths[1].startsWith(SEPARATOR_STR) || pathname.endsWith(SEPARATOR_STR))
+					pathname += (paths[1].startsWith(SEPARATOR) || pathname.endsWith(SEPARATOR))
 																				? paths[1]
-																				: SEPARATOR_STR + paths[1];
+																				: SEPARATOR + paths[1];
 			}
 			absolutePatternTokens = stringsToTokens(splitPathname(pathname));
 		}
@@ -1238,12 +1219,11 @@ public class PathnameFilter
 
 	//------------------------------------------------------------------
 
-	private List<PatternToken> stringsToTokens(String[] strs)
+	private List<PatternToken> stringsToTokens(List<String> strs)
 	{
 		List<PatternToken> tokens = new ArrayList<>();
 		for (String str : strs)
-			tokens.add(((str.indexOf(SINGLE_WILDCARD_CHAR) < 0) &&
-						 (str.indexOf(MULTIPLE_WILDCARD_CHAR) < 0))
+			tokens.add(((str.indexOf(NAME_SINGLE_WILDCARD_CHAR) < 0) && (str.indexOf(NAME_MULTIPLE_WILDCARD_CHAR) < 0))
 								? new PatternToken(str, ignoreCase)
 								: str.equals(PATH_MULTIPLE_WILDCARD_STR)
 										? new PatternToken(PatternToken.Kind.PATH_MULTIPLE_WILDCARD)
@@ -1252,25 +1232,6 @@ public class PathnameFilter
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class fields
-////////////////////////////////////////////////////////////////////////
-
-	private static	ErrorMode	errorMode;
-	private static	List<File>	errors		= new ArrayList<>();
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	String				pattern;
-	private	String				basePathname;
-	private	List<PatternToken>	patternTokens;
-	private	List<PatternToken>	absolutePatternTokens;
-	private	boolean				hasWildcards;
-	private	boolean				hasPathWildcards;
-	private	boolean				ignoreCase;
 
 }
 

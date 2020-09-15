@@ -2,7 +2,7 @@
 
 Chunk.java
 
-Abstract IFF chunk class.
+Class: abstract IFF chunk.
 
 \*====================================================================*/
 
@@ -25,7 +25,7 @@ import java.io.OutputStream;
 //----------------------------------------------------------------------
 
 
-// ABSTRACT IFF CHUNK CLASS
+// CLASS: ABSTRACT IFF CHUNK
 
 
 public abstract class Chunk
@@ -37,6 +37,13 @@ public abstract class Chunk
 
 	public static final	int	SIZE_SIZE	= 4;
 	public static final	int	HEADER_SIZE	= IffId.SIZE + SIZE_SIZE;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	protected	IffId	id;
+	protected	byte[]	data;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -209,13 +216,6 @@ public abstract class Chunk
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	protected	IffId	id;
-	protected	byte[]	data;
 
 }
 
