@@ -1029,7 +1029,7 @@ public class Scrypt
 	 * hash function is HMAC-SHA256 (hash-based message authentication code using the SHA-256 cryptographic hash
 	 * function), and returns the derived key.
 	 * <p>
-	 * PBKDF2 is specified in <a href="http://tools.ietf.org/html/rfc2898">IETF RFC 2898</a>.
+	 * PBKDF2 is specified in <a href="https://tools.ietf.org/html/rfc2898">IETF RFC 2898</a>.
 	 * </p>
 	 *
 	 * @param  key

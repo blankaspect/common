@@ -33,7 +33,7 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
  * This class implements a hash-based message authentication code (HMAC) whose underlying function is the SHA-256
  * cryptographic hash function.
  * <p>
- * HMAC is specified in <a href="http://tools.ietf.org/html/rfc2104">IETF RFC 2104</a>.
+ * HMAC is specified in <a href="https://tools.ietf.org/html/rfc2104">IETF RFC 2104</a>.
  * </p>
  */
 

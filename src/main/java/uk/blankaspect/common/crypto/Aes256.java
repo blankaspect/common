@@ -32,7 +32,7 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
  * This class implements the Advanced Encryption Standard (AES) block cipher with a 256-bit key.
  * <p>
  * The Advanced Encryption Standard is specified in <a
- * href="http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf">NIST FIPS 197</a> (PDF file).
+ * href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf">NIST FIPS 197</a> (PDF file).
  * </p>
  */
 
