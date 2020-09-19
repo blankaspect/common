@@ -31,7 +31,7 @@ import uk.blankaspect.common.function.IFunction1;
 
 
 /**
- * This class provides utiltiy methods that relate to {@linkplain Collection collections}.
+ * This class provides utility methods that relate to {@linkplain Collection collections}.
  */
 
 public class CollectionUtils
