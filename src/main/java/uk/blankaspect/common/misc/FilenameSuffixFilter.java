@@ -2,7 +2,7 @@
 
 FilenameSuffixFilter.java
 
-Filename suffix filter class.
+Class: filename-suffix filter.
 
 \*====================================================================*/
 
@@ -24,16 +24,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import uk.blankaspect.common.filesystem.PathnameUtils;
+
 //----------------------------------------------------------------------
 
 
-// FILENAME SUFFIX FILTER CLASS
+// CLASS: FILENAME-SUFFIX FILTER
 
 
 public class FilenameSuffixFilter
 	extends javax.swing.filechooser.FileFilter
 	implements java.io.FileFilter
 {
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	List<String>	suffixes;
+	private	String			description;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -72,18 +81,10 @@ public class FilenameSuffixFilter
 //  Instance methods : FileFilter interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public boolean accept(File file)
 	{
-		if (file.isDirectory())
-			return true;
-
-		String filename = file.getName().toLowerCase();
-		for (String suffix : suffixes)
-		{
-			if (filename.endsWith(suffix))
-				return true;
-		}
-		return false;
+		return file.isDirectory() || accepts(file.getName());
 	}
 
 	//------------------------------------------------------------------
@@ -108,7 +109,7 @@ public class FilenameSuffixFilter
 	@Override
 	public int hashCode()
 	{
-		return (description.hashCode() * 31 + suffixes.hashCode());
+		return description.hashCode() * 31 + suffixes.hashCode();
 	}
 
 	//------------------------------------------------------------------
@@ -132,12 +133,12 @@ public class FilenameSuffixFilter
 
 	//------------------------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
+	public boolean accepts(String filename)
+	{
+		return (filename != null) && PathnameUtils.suffixMatches(filename, suffixes);
+	}
 
-	private	List<String>	suffixes;
-	private	String			description;
+	//------------------------------------------------------------------
 
 }
 

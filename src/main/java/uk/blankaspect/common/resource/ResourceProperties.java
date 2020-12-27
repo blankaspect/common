@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
 import uk.blankaspect.common.exception2.LocationException;
 
 //----------------------------------------------------------------------
@@ -103,7 +104,7 @@ public class ResourceProperties
 				}
 				catch (IOException e)
 				{
-					System.err.println(e);
+					ExceptionUtils.printStderrLocated(e);
 				}
 			}
 		}

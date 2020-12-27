@@ -100,25 +100,25 @@ public class ExceptionUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates and returns a string representation of the specified instance of {@link Throwable}.
+	 * Creates and returns a string representation of the specified {@linkplain Throwable exception}.
 	 *
-	 * @param  throwable
-	 *           the {@code Throwable} for which a string representation will be created.
-	 * @return a string representation of <i>throwable</i>.
+	 * @param  exception
+	 *           the exception for which a string representation will be created.
+	 * @return a string representation of {@code exception}.
 	 */
 
-	public static String throwableToString(Throwable throwable)
+	public static String exceptionToString(Throwable exception)
 	{
 		// Initialise buffer
 		StringBuilder buffer = new StringBuilder(256);
 
 		// Append detail message
-		String message = throwable.getMessage();
+		String message = exception.getMessage();
 		if (message != null)
 			buffer.append(message);
 
 		// Append string representation of chain of causes
-		Throwable cause = throwable.getCause();
+		Throwable cause = exception.getCause();
 		if (cause != null)
 		{
 			if (buffer.length() > 0)

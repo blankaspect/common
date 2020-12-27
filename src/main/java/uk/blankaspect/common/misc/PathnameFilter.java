@@ -20,13 +20,14 @@ package uk.blankaspect.common.misc;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import uk.blankaspect.common.exception.AppException;
+
+import uk.blankaspect.common.exception2.ExceptionUtils;
 
 import uk.blankaspect.common.string.StringUtils;
 
@@ -76,9 +77,6 @@ public class PathnameFilter
 
 		ACCESS_NOT_PERMITTED
 		("Access to a file or directory in the pathname was not permitted."),
-
-		FAILED_TO_CONVERT_TO_CANONICAL_FORM
-		("Failed to convert the pathname to canonical form."),
 
 		DOUBLE_DOT_AFTER_WILDCARD
 		("\"..\" is not allowed after a wildcard in a pathname-filter pattern.");
@@ -544,6 +542,13 @@ public class PathnameFilter
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
+		private boolean isEmpty()
+		{
+			return (kind == Kind.LITERAL) && value.isEmpty();
+		}
+
+		//--------------------------------------------------------------
+
 		private boolean match(String filename,
 							  int    filenameIndex,
 							  int    tokenIndex)
@@ -784,15 +789,19 @@ public class PathnameFilter
 		this.ignoreCase = ignoreCase;
 
 		// Initialise pattern tokens
-		patternTokens = stringsToTokens(getPathnameComponents(new File(pattern)));
-		for (int i = 0; i < patternTokens.size(); i++)
+		patternTokens = new ArrayList<>();
+		for (PatternToken token : stringsToTokens(getPathnameComponents(new File(pattern))))
 		{
-			PatternToken token = patternTokens.get(i);
 			if (token.kind == PatternToken.Kind.LITERAL)
 			{
-				if ((token.value.isEmpty() && (i > 0)) || token.value.equals("."))
-					patternTokens.remove(i--);
-				else if (hasWildcards && token.value.equals(".."))
+				if (token.value.isEmpty() && !patternTokens.isEmpty())
+				{
+					if ((File.separatorChar != '\\') || (patternTokens.size() > 1) || !patternTokens.get(0).isEmpty())
+						token = null;
+				}
+				else if (token.value.equals("."))
+					token = null;
+				else if (token.value.equals("..") && hasWildcards)
 					throw new AppException(ErrorId.DOUBLE_DOT_AFTER_WILDCARD);
 			}
 			else
@@ -801,6 +810,8 @@ public class PathnameFilter
 				if (token.kind == PatternToken.Kind.PATH_MULTIPLE_WILDCARD)
 					hasPathWildcards = true;
 			}
+			if (token != null)
+				patternTokens.add(token);
 		}
 
 		// Initialise absolute pattern tokens
@@ -895,20 +906,16 @@ public class PathnameFilter
 
 	//------------------------------------------------------------------
 
-	private static String toCanonicalPathname(File file)
+	private static String toAbsolutePathname(File file)
 		throws FileException
 	{
 		try
 		{
-			return normalisePathname(file.getCanonicalPath());
+			return normalisePathname(file.getAbsolutePath());
 		}
 		catch (SecurityException e)
 		{
 			throw new FileException(ErrorId.ACCESS_NOT_PERMITTED, file);
-		}
-		catch (IOException e)
-		{
-			throw new FileException(ErrorId.FAILED_TO_CONVERT_TO_CANONICAL_FORM, file, e);
 		}
 	}
 
@@ -924,7 +931,7 @@ public class PathnameFilter
 	private static List<String> getAbsolutePathnameComponents(File file)
 		throws AppException
 	{
-		return splitPathname(toCanonicalPathname(file));
+		return splitPathname(toAbsolutePathname(file));
 	}
 
 	//------------------------------------------------------------------
@@ -1176,7 +1183,7 @@ public class PathnameFilter
 			if ((errorMode == ErrorMode.LIST) || (errorMode == ErrorMode.LIST_AND_WRITE))
 				errors.add(file);
 			if ((errorMode == ErrorMode.WRITE) || (errorMode == ErrorMode.LIST_AND_WRITE))
-				System.err.println(e);
+				ExceptionUtils.printStderrLocated(e);
 			return false;
 		}
 	}
@@ -1199,7 +1206,7 @@ public class PathnameFilter
 				pathname = paths[1];
 			else
 			{
-				pathname = toCanonicalPathname(new File(paths[0]));
+				pathname = toAbsolutePathname(new File(paths[0]));
 				if (!paths[1].isEmpty())
 					pathname += (paths[1].startsWith(SEPARATOR) || pathname.endsWith(SEPARATOR))
 																				? paths[1]

@@ -2,7 +2,7 @@
 
 DataImporter.java
 
-Data importer class.
+Class: data importer.
 
 \*====================================================================*/
 
@@ -31,10 +31,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
+
 //----------------------------------------------------------------------
 
 
-// DATA IMPORTER CLASS
+// CLASS: DATA IMPORTER
 
 
 public class DataImporter
@@ -128,7 +130,7 @@ public class DataImporter
 					}
 					catch (URISyntaxException e)
 					{
-						System.err.println(e);
+						ExceptionUtils.printStderrLocated(e);
 					}
 				}
 			}

@@ -39,6 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
+
 import uk.blankaspect.common.function.IProcedure1;
 
 import uk.blankaspect.common.string.StringUtils;
@@ -58,16 +60,16 @@ public class DataTxChannel
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	MIN_PORT	= 49152;
-	public static final		int	MAX_PORT	= 65535;
+	public static final		int		MIN_PORT	= 49152;
+	public static final		int		MAX_PORT	= 65535;
 
-	public static final		int	MAX_NUM_DATA_ITEMS	= 1 << 12;  // 4096;
+	public static final		int		MAX_NUM_DATA_ITEMS	= 1 << 12;  // 4096;
 
 	private static final	String	HOST	= "localhost";
 
 	private static final	char	END_OF_MESSAGE	= '\u0003';
 
-	private static final	int	NUM_MESSAGE_PARTS	= 5;
+	private static final	int		NUM_MESSAGE_PARTS	= 5;
 
 	private static final	String	MESSAGE_SEPARATOR	= ":";
 
@@ -304,7 +306,7 @@ public class DataTxChannel
 		}
 		catch (IOException e)
 		{
-			System.err.println(e);
+			ExceptionUtils.printStderrLocated(e);
 			serverSocket = null;
 		}
 
@@ -337,7 +339,7 @@ public class DataTxChannel
 				}
 				catch (IOException | SecurityException e)
 				{
-					System.err.println(e);
+					ExceptionUtils.printStderrLocated(e);
 				}
 
 				// Start thread for new connection
@@ -511,7 +513,7 @@ public class DataTxChannel
 						}
 						catch (IOException | SecurityException e)
 						{
-							System.err.println(e);
+							ExceptionUtils.printStderrLocated(e);
 						}
 						finally
 						{
@@ -574,13 +576,9 @@ public class DataTxChannel
 			socket = new Socket();
 			socket.connect(new InetSocketAddress(HOST, port), CONNECTION_TIMEOUT);
 		}
-		catch (SocketTimeoutException e)
-		{
-			System.err.println(e);
-		}
 		catch (IOException e)
 		{
-			System.err.println(e);
+			ExceptionUtils.printStderrLocated(e);
 		}
 
 		// If socket is connected, transmit data to target
@@ -630,7 +628,7 @@ public class DataTxChannel
 			}
 			catch (IOException | SecurityException e)
 			{
-				System.err.println(e);
+				ExceptionUtils.printStderrLocated(e);
 			}
 			finally
 			{

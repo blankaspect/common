@@ -2,7 +2,7 @@
 
 BitSelectionPanel.java
 
-Bit selection panel class.
+Class: bit-selection panel.
 
 \*====================================================================*/
 
@@ -30,8 +30,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
@@ -48,19 +48,17 @@ import uk.blankaspect.common.swing.colour.Colours;
 import uk.blankaspect.common.swing.font.FontKey;
 import uk.blankaspect.common.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
-
 import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
 
-// BIT SELECTION PANEL CLASS
+// CLASS: BIT-SELECTION PANEL
 
 
 public class BitSelectionPanel
 	extends JComponent
-	implements ActionListener, FocusListener, MouseListener
+	implements ActionListener
 {
 
 ////////////////////////////////////////////////////////////////////////
@@ -77,9 +75,10 @@ public class BitSelectionPanel
 	private static final	Color	BACKGROUND_COLOUR					= new Color(254, 254, 250);
 	private static final	Color	TEXT_COLOUR							= Colours.FOREGROUND;
 	private static final	Color	BORDER_COLOUR						= new Color(176, 184, 176);
-	private static final	Color	FOCUSED_BORDER_COLOUR				= Color.BLACK;
-	private static final	Color	SELECTION_BACKGROUND_COLOUR			= new Color(200, 224, 200);
-	private static final	Color	FOCUSED_SELECTION_BACKGROUND_COLOUR	= new Color(248, 216, 144);
+	private static final	Color	FOCUSED_BORDER_COLOUR				= new Color(80, 160, 208);
+	private static final	Color	DISABLED_BACKGROUND_COLOUR			= new Color(232, 232, 232);
+	private static final	Color	SELECTED_BACKGROUND_COLOUR			= new Color(200, 224, 200);
+	private static final	Color	FOCUSED_SELECTED_BACKGROUND_COLOUR	= new Color(248, 216, 144);
 
 	// Commands
 	private interface Command
@@ -121,6 +120,17 @@ public class BitSelectionPanel
 	};
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	int	numBits;
+	private	int	enabledMask;
+	private	int	selectedMask;
+	private	int	activeIndex;
+	private	int	cellWidth;
+	private	int	cellHeight;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
@@ -129,9 +139,10 @@ public class BitSelectionPanel
 	 */
 
 	public BitSelectionPanel(int numBits,
-							 int bitMask)
+							 int selectedMask)
 	{
-		this(numBits, Integer.SIZE, bitMask);
+		// Call alternative constructor
+		this(numBits, (1 << Integer.SIZE) - 1, selectedMask);
 	}
 
 	//------------------------------------------------------------------
@@ -141,35 +152,74 @@ public class BitSelectionPanel
 	 */
 
 	public BitSelectionPanel(int numBits,
-							 int maxNumSelectedBits,
-							 int bitMask)
+							 int enabledMask,
+							 int selectedMask)
 	{
 		// Validate arguments
-		if ((numBits <= 0) || (numBits > Integer.SIZE) || (maxNumSelectedBits < 0))
-			throw new IllegalArgumentException();
+		if ((numBits <= 0) || (numBits > Integer.SIZE))
+			throw new IllegalArgumentException("Number of bits out of bounds");
 
 		// Set font
 		FontUtils.setAppFont(FontKey.MAIN, this);
 
 		// Initialise instance variables
 		this.numBits = numBits;
-		this.maxNumSelectedBits = maxNumSelectedBits;
-		this.bitMask = bitMask;
+		this.enabledMask = enabledMask;
+		this.selectedMask = selectedMask;
 		FontMetrics fontMetrics = getFontMetrics(getFont());
 		String str = StringUtils.createCharString('0', NumberUtils.getNumDecDigitsInt(numBits - 1));
 		cellWidth = GRID_LINE_WIDTH + 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(str);
 		cellHeight = GRID_LINE_WIDTH + 2 * INNER_VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
 
-		// Set component attributes
+		// Set properties
 		setOpaque(true);
 		setFocusable(true);
 
 		// Add commands to action map
 		KeyAction.create(this, JComponent.WHEN_FOCUSED, this, KEY_COMMANDS);
 
-		// Add listeners
-		addFocusListener(this);
-		addMouseListener(this);
+		// Add focus listener
+		addFocusListener(new FocusListener()
+		{
+			@Override
+			public void focusGained(FocusEvent event)
+			{
+				repaint();
+			}
+
+			@Override
+			public void focusLost(FocusEvent event)
+			{
+				repaint();
+			}
+		});
+
+		// Add mouse listener
+		addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mousePressed(MouseEvent event)
+			{
+				if (SwingUtilities.isLeftMouseButton(event))
+				{
+					int x = event.getX();
+					int y = event.getY();
+					if ((x >= 0) && (x < numBits * cellWidth) && (y >= 0) && (y < NUM_ROWS * cellHeight))
+					{
+						requestFocusInWindow();
+						int index = numBits - x / cellWidth - 1;
+						if (isBitEnabled(index))
+						{
+							setActiveIndex(index);
+							onToggleSelectedBit();
+						}
+					}
+				}
+			}
+		});
+
+		// Select initial bit
+		onSelectRightMax();
 	}
 
 	//------------------------------------------------------------------
@@ -178,12 +228,13 @@ public class BitSelectionPanel
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
 		String command = event.getActionCommand();
 
 		if (command.equals(Command.TOGGLE_SELECTED))
-			onToggleSelected();
+			onToggleSelectedBit();
 
 		else if (command.equals(Command.SELECT_LEFT_UNIT))
 			onSelectLeftUnit();
@@ -196,73 +247,6 @@ public class BitSelectionPanel
 
 		else if (command.equals(Command.SELECT_RIGHT_MAX))
 			onSelectRightMax();
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance methods : FocusListener interface
-////////////////////////////////////////////////////////////////////////
-
-	public void focusGained(FocusEvent event)
-	{
-		repaint();
-	}
-
-	//------------------------------------------------------------------
-
-	public void focusLost(FocusEvent event)
-	{
-		repaint();
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance methods : MouseListener interface
-////////////////////////////////////////////////////////////////////////
-
-	public void mouseClicked(MouseEvent event)
-	{
-		// do nothing
-	}
-
-	//------------------------------------------------------------------
-
-	public void mouseEntered(MouseEvent event)
-	{
-		// do nothing
-	}
-
-	//------------------------------------------------------------------
-
-	public void mouseExited(MouseEvent event)
-	{
-		// do nothing
-	}
-
-	//------------------------------------------------------------------
-
-	public void mousePressed(MouseEvent event)
-	{
-		if (SwingUtilities.isLeftMouseButton(event))
-		{
-			int x = event.getX();
-			int y = event.getY();
-			if ((x >= 0) && (x < numBits * cellWidth) && (y >= 0) && (y < NUM_ROWS * cellHeight))
-			{
-				requestFocusInWindow();
-				setActiveIndex(numBits - x / cellWidth - 1);
-				onToggleSelected();
-			}
-		}
-	}
-
-	//------------------------------------------------------------------
-
-	public void mouseReleased(MouseEvent event)
-	{
-		// do nothing
 	}
 
 	//------------------------------------------------------------------
@@ -296,9 +280,13 @@ public class BitSelectionPanel
 		int y = OUTER_VERTICAL_MARGIN + GRID_LINE_WIDTH;
 		for (int i = numBits - 1; i >= 0; i--)
 		{
-			gr.setColor(((bitMask & 1 << i) == 0) ? BACKGROUND_COLOUR
-												  : isFocusOwner() ? FOCUSED_SELECTION_BACKGROUND_COLOUR
-																   : SELECTION_BACKGROUND_COLOUR);
+			gr.setColor(isBitEnabled(i)
+								? isBitSelected(i)
+										? isFocusOwner()
+												? FOCUSED_SELECTED_BACKGROUND_COLOUR
+												: SELECTED_BACKGROUND_COLOUR
+										: BACKGROUND_COLOUR
+								: DISABLED_BACKGROUND_COLOUR);
 			gr.fillRect(x, y, cellWidth - 1, cellHeight - 1);
 			x += cellWidth;
 		}
@@ -343,11 +331,11 @@ public class BitSelectionPanel
 		// Draw focus indicator
 		if (isFocusOwner())
 		{
-			((Graphics2D)gr).setStroke(GuiUtils.getBasicDash());
 			gr.setColor(FOCUSED_BORDER_COLOUR);
-			x = GRID_LINE_WIDTH + (numBits - activeIndex - 1) * cellWidth;
-			y = OUTER_VERTICAL_MARGIN + GRID_LINE_WIDTH;
-			gr.drawRect(x, y, cellWidth - 2, cellHeight - 2);
+			x = (numBits - activeIndex - 1) * cellWidth;
+			y = OUTER_VERTICAL_MARGIN;
+			gr.drawRect(x, y, cellWidth, cellHeight);
+			gr.drawRect(++x, ++y, cellWidth - 2, cellHeight - 2);
 		}
 	}
 
@@ -357,9 +345,23 @@ public class BitSelectionPanel
 //  Instance methods
 ////////////////////////////////////////////////////////////////////////
 
-	public int getBitMask()
+	public int getSelectedMask()
 	{
-		return bitMask;
+		return selectedMask;
+	}
+
+	//------------------------------------------------------------------
+
+	private boolean isBitEnabled(int index)
+	{
+		return ((enabledMask & 1 << index) != 0);
+	}
+
+	//------------------------------------------------------------------
+
+	private boolean isBitSelected(int index)
+	{
+		return ((selectedMask & 1 << index) != 0);
 	}
 
 	//------------------------------------------------------------------
@@ -375,61 +377,64 @@ public class BitSelectionPanel
 
 	//------------------------------------------------------------------
 
-	private void onToggleSelected()
+	private void onToggleSelectedBit()
 	{
-		int oldBitMask = bitMask;
-		int mask = 1 << activeIndex;
-		if ((bitMask & mask) == 0)
+		if (isBitEnabled(activeIndex))
 		{
-			if (Integer.bitCount(bitMask) < maxNumSelectedBits)
-				bitMask |= mask;
-		}
-		else
-			bitMask &= ~mask;
-		if (bitMask != oldBitMask)
+			if (isBitSelected(activeIndex))
+				selectedMask &= ~(1 << activeIndex);
+			else
+				selectedMask |= 1 << activeIndex;
+
 			repaint();
+		}
 	}
 
 	//------------------------------------------------------------------
 
 	private void onSelectLeftUnit()
 	{
-		setActiveIndex(Math.min(activeIndex + 1, numBits - 1));
+		int index = activeIndex;
+		while (++index < numBits)
+		{
+			if (isBitEnabled(index))
+				break;
+		}
+		if (index < numBits)
+			setActiveIndex(index);
 	}
 
 	//------------------------------------------------------------------
 
 	private void onSelectRightUnit()
 	{
-		setActiveIndex(Math.max(0, activeIndex - 1));
+		int index = activeIndex;
+		while (--index >= 0)
+		{
+			if (isBitEnabled(index))
+				break;
+		}
+		if (index >= 0)
+			setActiveIndex(index);
 	}
 
 	//------------------------------------------------------------------
 
 	private void onSelectLeftMax()
 	{
-		setActiveIndex(numBits - 1);
+		activeIndex = numBits;
+		onSelectRightUnit();
 	}
 
 	//------------------------------------------------------------------
 
 	private void onSelectRightMax()
 	{
-		setActiveIndex(0);
+		activeIndex = -1;
+		onSelectLeftUnit();
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	int	numBits;
-	private	int	maxNumSelectedBits;
-	private	int	bitMask;
-	private	int	activeIndex;
-	private	int	cellWidth;
-	private	int	cellHeight;
 
 }
 

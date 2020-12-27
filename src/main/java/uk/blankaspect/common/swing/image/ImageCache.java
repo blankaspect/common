@@ -33,6 +33,8 @@ import javax.imageio.ImageIO;
 
 import javax.swing.ImageIcon;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
+
 import uk.blankaspect.common.indexedsub.IndexedSub;
 
 import uk.blankaspect.common.resource.ResourceUtils;
@@ -56,6 +58,9 @@ public class ImageCache
 ////////////////////////////////////////////////////////////////////////
 //  Constants
 ////////////////////////////////////////////////////////////////////////
+
+	/** The default image. */
+	public static final		BufferedImage	DEFAULT_IMAGE;
 
 	/** The directory that contains image files. */
 	private static final	String	DIRECTORY	= "../images/";
@@ -124,9 +129,6 @@ public class ImageCache
 		(byte)0x49, (byte)0x45, (byte)0x4E, (byte)0x44, (byte)0xAE, (byte)0x42, (byte)0x60, (byte)0x82
 	};
 
-	/** The default image. */
-	private static final	BufferedImage	DEFAULT_IMAGE;
-
 ////////////////////////////////////////////////////////////////////////
 //  Class variables
 ////////////////////////////////////////////////////////////////////////
@@ -146,7 +148,7 @@ public class ImageCache
 		// Add the image directory of this class to the list
 		addDirectory(ImageCache.class, DIRECTORY);
 
-		// Initialise default image
+		// Initialise the default image
 		BufferedImage image = null;
 		try
 		{
@@ -265,7 +267,7 @@ public class ImageCache
 					}
 					catch (IOException e)
 					{
-						System.err.println(e);
+						ExceptionUtils.printStderrLocated(e);
 					}
 
 					// Add image to cache
@@ -279,7 +281,7 @@ public class ImageCache
 					}
 					catch (IOException e)
 					{
-						System.err.println(e);
+						ExceptionUtils.printStderrLocated(e);
 					}
 					break;
 				}

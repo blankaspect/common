@@ -24,6 +24,8 @@ import java.io.RandomAccessFile;
 
 import java.nio.charset.StandardCharsets;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
+
 //----------------------------------------------------------------------
 
 
@@ -84,7 +86,7 @@ public class PortNumber
 			}
 			catch (IllegalArgumentException e)
 			{
-				System.err.println(dirPath);
+				ExceptionUtils.printStderrLocated(dirPath);
 				System.err.println(key);
 				System.err.println(INVALID_PORT_NUMBER_STR);
 			}
@@ -140,7 +142,7 @@ public class PortNumber
 		}
 		catch (Exception e)
 		{
-			System.err.println(FAILED_TO_READ_STR + pathname);
+			ExceptionUtils.printStderrLocated(FAILED_TO_READ_STR + pathname);
 			if (e.getMessage() != null)
 				System.err.println(e.getMessage());
 		}
@@ -188,7 +190,7 @@ public class PortNumber
 		}
 		catch (Exception e)
 		{
-			System.err.println(FAILED_TO_WRITE_STR + pathname);
+			ExceptionUtils.printStderrLocated(FAILED_TO_WRITE_STR + pathname);
 			if (e.getMessage() != null)
 				System.err.println(e.getMessage());
 		}
